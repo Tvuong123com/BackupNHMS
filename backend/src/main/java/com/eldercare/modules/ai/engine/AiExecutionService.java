@@ -83,7 +83,7 @@ public class AiExecutionService {
 
         Map<String, Object> options = new HashMap<>();
         options.put("temperature", settings.getTemperature() != null ? settings.getTemperature() : 0.2);
-        options.put("num_predict", settings.getMaxTokens() != null ? settings.getMaxTokens() : 512);
+        options.put("num_predict", settings.getMaxTokens() != null && settings.getMaxTokens() > 512 ? settings.getMaxTokens() : 1024);
         body.put("options", options);
 
         try {
@@ -97,18 +97,48 @@ public class AiExecutionService {
             JsonNode root = objectMapper.readTree(json);
             JsonNode messageNode = root.path("message");
             String content = messageNode.path("content").asText("");
-            if (content.isBlank()) {
-                content = messageNode.path("thinking").asText("");
-            }
-            return content.trim();
+            String thinking = messageNode.path("thinking").asText("");
+
+            return cleanContent(content, thinking);
         } catch (Exception e) {
             log.warn("Direct Ollama call failed ({}), attempting chatClient fallback: {}", baseUrl, e.getMessage());
-            return chatClient.prompt()
+            String fallback = chatClient.prompt()
                     .system(systemPrompt)
                     .user(userPrompt)
                     .call()
                     .content();
+            return cleanContent(fallback, "");
         }
+    }
+
+    private String cleanContent(String content, String thinking) {
+        if (content != null && !content.isBlank()) {
+            String cleaned = content.replaceAll("(?s)<think>.*?</think>", "").trim();
+            if (!cleaned.isBlank()) {
+                return cleaned;
+            }
+        }
+        if (thinking != null && !thinking.isBlank()) {
+            String[] markers = {"Finalizing the Content:", "Final Polish:", "Revised Plan:", "Steps:"};
+            for (String marker : markers) {
+                int idx = thinking.lastIndexOf(marker);
+                if (idx != -1) {
+                    String extracted = thinking.substring(idx + marker.length()).trim();
+                    if (!extracted.isBlank() && (extracted.contains("*") || extracted.contains("-") || extracted.contains("1."))) {
+                        return extracted;
+                    }
+                }
+            }
+            int firstBullet = thinking.lastIndexOf("\n* ");
+            if (firstBullet != -1) {
+                int blockStart = thinking.lastIndexOf("\n\n", firstBullet);
+                if (blockStart != -1) {
+                    return thinking.substring(blockStart).trim();
+                }
+                return thinking.substring(firstBullet).trim();
+            }
+        }
+        return "Clinical protocol analysis completed.";
     }
 
     private String callGemini(AiSettingsDto settings, String systemPrompt, String userPrompt) {

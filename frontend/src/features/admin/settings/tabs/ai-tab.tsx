@@ -78,9 +78,16 @@ export const AiTab = () => {
     try {
       setLoading(true);
       const data = await aiService.getSettings();
+      const localKey = localStorage.getItem("eldercare_gemini_api_key") || "";
+      const effectiveKey = (data.geminiApiKey && !data.geminiApiKey.includes("...") && data.geminiApiKey !== "******")
+        ? data.geminiApiKey
+        : (localKey || data.geminiApiKey || "");
+
       setSettings((prev) => ({
         ...prev,
         ...data,
+        geminiApiKey: effectiveKey,
+        geminiModel: data.geminiModel && data.geminiModel !== "gemini-2.0-flash" ? data.geminiModel : "gemini-3.8-flash",
         features: {
           ...prev.features,
           ...(data.features || {}),
@@ -88,6 +95,10 @@ export const AiTab = () => {
       }));
     } catch (err: any) {
       console.warn("Failed to load AI settings from backend, using defaults:", err);
+      const localKey = localStorage.getItem("eldercare_gemini_api_key") || "";
+      if (localKey) {
+        setSettings(prev => ({ ...prev, geminiApiKey: localKey }));
+      }
     } finally {
       setLoading(false);
     }
@@ -96,10 +107,18 @@ export const AiTab = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const updated = await aiService.updateSettings(settings);
+      const keyToSave = settings.geminiApiKey || localStorage.getItem("eldercare_gemini_api_key") || "";
+      if (keyToSave && !keyToSave.includes("...")) {
+        localStorage.setItem("eldercare_gemini_api_key", keyToSave);
+      }
+      const updated = await aiService.updateSettings({
+        ...settings,
+        geminiApiKey: keyToSave,
+      });
       setSettings((prev) => ({
         ...prev,
         ...updated,
+        geminiApiKey: keyToSave, // Keep real key in local state so user doesn't see dots
       }));
       toast.success("AI Configuration saved successfully!", {
         description: `Active engine: ${settings.provider === "GOOGLE_GEMINI" ? "Google Gemini API (Cloud)" : "Local Ollama (Offline)"}`,
@@ -366,7 +385,13 @@ export const AiTab = () => {
                   <Input
                     type={showApiKey ? "text" : "password"}
                     value={settings.geminiApiKey || ""}
-                    onChange={(e) => setSettings((prev) => ({ ...prev, geminiApiKey: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSettings((prev) => ({ ...prev, geminiApiKey: val }));
+                      if (val && !val.includes("...")) {
+                        localStorage.setItem("eldercare_gemini_api_key", val);
+                      }
+                    }}
                     placeholder="AIzaSy..."
                     className="pr-10 font-mono text-sm"
                   />

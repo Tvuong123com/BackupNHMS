@@ -8,6 +8,8 @@ import {
   ChevronDown,
   User,
   ShieldCheck,
+  Cloud,
+  Server,
 } from "lucide-react";
 import { aiService } from "../services/ai-service";
 
@@ -20,6 +22,10 @@ interface Message {
 
 export const AiChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [aiEngine, setAiEngine] = useState<{ provider: string; model: string }>({
+    provider: "GOOGLE_GEMINI",
+    model: "gemini-3.8-flash",
+  });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -32,12 +38,33 @@ export const AiChatWidget: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const fetchActiveEngine = async () => {
+    try {
+      const s = await aiService.getSettings();
+      if (s) {
+        setAiEngine({
+          provider: s.provider || "GOOGLE_GEMINI",
+          model: s.provider === "GOOGLE_GEMINI" 
+            ? (s.geminiModel || "gemini-3.8-flash") 
+            : (s.ollamaModel || "qwen3.5:2b-q4_K_M"),
+        });
+      }
+    } catch {
+      // fallback
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    fetchActiveEngine();
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
+      fetchActiveEngine();
       scrollToBottom();
     }
   }, [messages, isOpen]);
@@ -59,6 +86,12 @@ export const AiChatWidget: React.FC = () => {
 
     try {
       const response = await aiService.chat({ message: text });
+      if (response.model) {
+        setAiEngine({
+          model: response.model,
+          provider: response.model.toLowerCase().includes("gemini") ? "GOOGLE_GEMINI" : "LOCAL_OLLAMA",
+        });
+      }
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
@@ -70,7 +103,7 @@ export const AiChatWidget: React.FC = () => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: "The clinical AI assistant is currently warming up or unavailable. Please ensure local Ollama is running and try again shortly.",
+        text: "The clinical AI assistant is currently warming up or unavailable. Please verify AI settings or ensure connection to the selected model.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -107,14 +140,24 @@ export const AiChatWidget: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[11px] text-blue-100 flex items-center space-x-1">
-                  <ShieldCheck className="w-3 h-3 inline" />
-                  <span>Qwen 3.5 Local • Clinical Guard</span>
+                  {aiEngine.provider === "GOOGLE_GEMINI" ? (
+                    <>
+                      <Sparkles className="w-3 h-3 inline text-cyan-300" />
+                      <span className="font-mono">{aiEngine.model} • Google AI Studio</span>
+                    </>
+                  ) : (
+                    <>
+                      <Server className="w-3 h-3 inline text-amber-300" />
+                      <span className="font-mono">{aiEngine.model} • Local Ollama</span>
+                    </>
+                  )}
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-1">
               <button
-                onClick={() =>
+                onClick={() => {
+                  fetchActiveEngine();
                   setMessages([
                     {
                       id: "welcome",
@@ -122,17 +165,17 @@ export const AiChatWidget: React.FC = () => {
                       text: "Hello! How can I assist you on your clinical shift today?",
                       timestamp: new Date(),
                     },
-                  ])
-                }
-                title="Reset conversation"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors"
+                  ]);
+                }}
+                title="Refresh active model status & reset conversation"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 title="Close chat"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

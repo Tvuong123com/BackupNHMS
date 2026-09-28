@@ -36,6 +36,7 @@ public class AiSettingsService {
 1. STRICT SCOPE: You are the internal Clinical Decision Assistant for ElderCare NHMS (Nursing Home Management System). You must exclusively assist with resident care, clinical evaluations (ADL/Fall/Cognitive), incident classification, care plan goals, medication safety, and nursing operations within this system. Strictly decline any queries outside elder care or nursing home workflows.
 2. SPEED & CONCISENESS: Return direct, structured, actionable bullet points without introductory pleasantries, conversational filler, or unnecessary text to maximize system response speed.
 3. CLINICAL ACCURACY & HIPAA: Follow evidence-based geriatric care protocols and HIPAA resident confidentiality. Never alter medication regimens without explicit physician order.
+4. DIRECT OUTPUT: Output ONLY the final clinical protocol or answer directly. Never output internal thoughts, reasoning steps, or headers like 'Thinking Process:'.
 """;
 
     private volatile AiSettingsDto currentSettings;
@@ -49,7 +50,12 @@ public class AiSettingsService {
                 AiSettingsDto saved = objectMapper.readValue(path.toFile(), AiSettingsDto.class);
                 if (saved != null) {
                     currentSettings = saved;
-                    log.info("Loaded AI settings from {}: provider={}", SETTINGS_FILE_PATH, currentSettings.getProvider());
+                    if ("gemini-2.0-flash".equalsIgnoreCase(currentSettings.getGeminiModel())
+                            || currentSettings.getGeminiModel() == null
+                            || currentSettings.getGeminiModel().isBlank()) {
+                        currentSettings.setGeminiModel("gemini-3.8-flash");
+                    }
+                    log.info("Loaded AI settings from {}: provider={}, model={}", SETTINGS_FILE_PATH, currentSettings.getProvider(), currentSettings.getGeminiModel());
                     return;
                 }
             }
@@ -121,10 +127,15 @@ public class AiSettingsService {
             keyToKeep = currentSettings.getGeminiApiKey();
         }
 
+        String geminiModel = newSettings.getGeminiModel();
+        if (geminiModel == null || geminiModel.isBlank() || "gemini-2.0-flash".equalsIgnoreCase(geminiModel)) {
+            geminiModel = "gemini-3.8-flash";
+        }
+
         AiSettingsDto updated = AiSettingsDto.builder()
                 .provider(newSettings.getProvider() != null ? newSettings.getProvider() : currentSettings.getProvider())
                 .geminiApiKey(keyToKeep)
-                .geminiModel(newSettings.getGeminiModel() != null ? newSettings.getGeminiModel() : "gemini-2.0-flash")
+                .geminiModel(geminiModel)
                 .ollamaBaseUrl(newSettings.getOllamaBaseUrl() != null ? newSettings.getOllamaBaseUrl() : defaultOllamaBaseUrl)
                 .ollamaModel(newSettings.getOllamaModel() != null ? newSettings.getOllamaModel() : defaultOllamaModel)
                 .temperature(newSettings.getTemperature() != null ? newSettings.getTemperature() : 0.2)
