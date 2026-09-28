@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Mail,
   Phone,
+  MapPin,
   Flame,
   Cpu,
 } from "lucide-react";
