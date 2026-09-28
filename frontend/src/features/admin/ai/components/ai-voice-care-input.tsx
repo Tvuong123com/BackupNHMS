@@ -69,8 +69,8 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
       } catch {
         // Fallback prompt nếu SpeechRecognition không khả dụng
         const manualInput = prompt(
-          "Nhập nội dung chăm sóc bằng giọng nói (hoặc gõ nhanh):",
-          "Cụ phòng 204 ăn hết 80% phần cơm, huyết áp 120/80, đã uống thuốc"
+          "Enter dictated care observation (or type quickly):",
+          "Resident in Room 204 ate 85% of breakfast, blood pressure 125/80, completed morning oral medications"
         );
         if (manualInput) {
           setTranscript(manualInput);
@@ -112,22 +112,22 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
               ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
               : "bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
           }`}
-          title="Bấm để nói nội dung chăm sóc, AI sẽ tự động điền form"
+          title="Dictate clinical observations; NLP extracts vitals and care records"
         >
           {isListening ? (
             <>
               <MicOff className="w-3.5 h-3.5 text-white" />
-              <span>Đang lắng nghe... (Bấm để hoàn tất)</span>
+              <span>Listening... (Click to finish)</span>
             </>
           ) : isProcessing ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>AI đang bóc tách...</span>
+              <span>Extracting clinical entities...</span>
             </>
           ) : (
             <>
               <Mic className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>🎙️ Voice Care Dictate</span>
+              <span>Dictate Care Note</span>
             </>
           )}
         </button>
@@ -139,32 +139,32 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
         )}
       </div>
 
-      {/* Hiển thị tóm tắt dữ liệu vừa trích xuất được */}
+      {/* Extracted entities summary */}
       {lastParsed && (
         <div className="p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
-              <Check className="w-3.5 h-3.5" /> Đã bóc tách tự động:
+              <Check className="w-3.5 h-3.5" /> Auto-Extracted Entities:
             </span>
             {lastParsed.dietaryIntakePercentage !== undefined && lastParsed.dietaryIntakePercentage !== null && (
               <span className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-medium">
-                Khẩu phần: {lastParsed.dietaryIntakePercentage}%
+                Intake: {lastParsed.dietaryIntakePercentage}%
               </span>
             )}
             {lastParsed.bloodPressureSystolic && lastParsed.bloodPressureDiastolic && (
               <span className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-medium">
-                HA: {lastParsed.bloodPressureSystolic}/{lastParsed.bloodPressureDiastolic} mmHg
+                BP: {lastParsed.bloodPressureSystolic}/{lastParsed.bloodPressureDiastolic} mmHg
               </span>
             )}
             {lastParsed.medicationTaken && (
               <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 font-medium">
-                ✓ Đã uống thuốc
+                ✓ Meds Administered
               </span>
             )}
           </div>
           <span className="text-[10px] text-zinc-400 shrink-0 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-indigo-400" />
-            Độ tin cậy {(lastParsed.confidence * 100).toFixed(0)}%
+            Confidence: {(lastParsed.confidence * 100).toFixed(0)}%
           </span>
         </div>
       )}

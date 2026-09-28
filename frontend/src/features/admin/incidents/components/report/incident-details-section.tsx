@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 
@@ -13,6 +13,7 @@ import {
   residentService,
   type ResidentListItemFE,
 } from "@/services/resident/residentService";
+import { AiAnalyzeIncidentButton } from "@/features/admin/ai/components/ai-analyze-incident-button";
 
 const inputClass =
   "h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20";
@@ -408,13 +409,40 @@ export function IncidentDetailsSection({
           />
         </Field>
 
-        <Field label="Description" required>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-sm font-medium text-foreground">
+              Description <span className="ml-1 text-destructive">*</span>
+            </Label>
+            <AiAnalyzeIncidentButton
+              description={description}
+              residentInfo={residentLabel}
+              location={location}
+              onApplySuggestion={(sug) => {
+                if (sug.suggestedIncidentType) {
+                  const match = incidentTypeOptions.find(
+                    (opt) =>
+                      opt.value === sug.suggestedIncidentType ||
+                      opt.label.toLowerCase() === sug.suggestedIncidentType.toLowerCase()
+                  );
+                  if (match) setIncidentType(match.value);
+                }
+                if (sug.suggestedSeverity && severities.length > 0) {
+                  const matchSev = severities.find(
+                    (sev) =>
+                      sev.level_name.toUpperCase() === sug.suggestedSeverity.toUpperCase()
+                  );
+                  if (matchSev) setSeverityId(matchSev.id);
+                }
+              }}
+            />
+          </div>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe what happened"
+            placeholder="Describe what happened (e.g. resident was found on floor next to bed, clutching right wrist with visible swelling...)"
           />
-        </Field>
+        </div>
 
         <Field label="Witnesses (optional)">
           <Textarea

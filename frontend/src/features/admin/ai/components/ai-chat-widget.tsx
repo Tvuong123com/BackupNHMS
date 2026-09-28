@@ -24,7 +24,7 @@ export const AiChatWidget: React.FC = () => {
     {
       id: "welcome",
       sender: "ai",
-      text: "Xin chào! Tôi là Trợ lý AI của Viện dưỡng lão ElderCare. Tôi có thể hỗ trợ bạn tra cứu quy trình, phân loại sự cố, gợi ý kế hoạch chăm sóc và tóm tắt thông tin ca trực.",
+      text: "Hello! I am your ElderCare Clinical Assistant. I can help with care protocols, incident severity classification, personalized care plans, and shift summaries.",
       timestamp: new Date(),
     },
   ]);
@@ -70,7 +70,7 @@ export const AiChatWidget: React.FC = () => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: "Hệ thống AI đang khởi động hoặc chưa sẵn sàng kết nối. Vui lòng kiểm tra lại dịch vụ Ollama local hoặc thử lại sau.",
+        text: "The clinical AI assistant is currently warming up or unavailable. Please ensure local Ollama is running and try again shortly.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -80,9 +80,9 @@ export const AiChatWidget: React.FC = () => {
   };
 
   const samplePrompts = [
-    "Quy trình xử lý khi phát hiện cư dân bị ngã?",
-    "Tiêu chuẩn phân loại sự cố mức High và Emergency?",
-    "Gợi ý các mục tiêu chăm sóc cho cụ suy giảm trí nhớ?",
+    "Immediate protocol for an unwitnessed resident fall?",
+    "Criteria for High vs Emergency incident severity?",
+    "Suggest care interventions for nighttime dementia wandering",
   ];
 
   return (
@@ -99,7 +99,7 @@ export const AiChatWidget: React.FC = () => {
               <div>
                 <div className="flex items-center space-x-1.5">
                   <h3 className="text-sm font-semibold tracking-wide">
-                    ElderCare AI Assistant
+                    ElderCare Clinical Assistant
                   </h3>
                   <span className="flex h-2 w-2 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -108,7 +108,7 @@ export const AiChatWidget: React.FC = () => {
                 </div>
                 <p className="text-[11px] text-blue-100 flex items-center space-x-1">
                   <ShieldCheck className="w-3 h-3 inline" />
-                  <span>Qwen 3.5 Local • HIPAA Guard</span>
+                  <span>Qwen 3.5 Local • Clinical Guard</span>
                 </p>
               </div>
             </div>
@@ -119,19 +119,19 @@ export const AiChatWidget: React.FC = () => {
                     {
                       id: "welcome",
                       sender: "ai",
-                      text: "Xin chào! Tôi có thể hỗ trợ gì cho bạn trong ca trực hôm nay?",
+                      text: "Hello! How can I assist you on your clinical shift today?",
                       timestamp: new Date(),
                     },
                   ])
                 }
-                title="Làm mới hội thoại"
+                title="Reset conversation"
                 className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                title="Đóng chat"
+                title="Close chat"
                 className="p-1.5 rounded-lg hover:bg-white/10 text-blue-100 hover:text-white transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -177,7 +177,7 @@ export const AiChatWidget: React.FC = () => {
               <div className="flex items-center space-x-2 text-zinc-500 py-1 pl-9">
                 <Sparkles className="w-4 h-4 text-indigo-500 animate-spin" />
                 <span className="text-[11px] animate-pulse">
-                  AI đang phân tích và soạn câu trả lời...
+                  Analyzing and drafting clinical response...
                 </span>
               </div>
             )}
@@ -206,7 +206,7 @@ export const AiChatWidget: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Nhập câu hỏi hoặc yêu cầu AI hỗ trợ..."
+              placeholder="Type your question or request clinical guidance..."
               className="flex-1 text-xs px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 focus:outline-none transition-colors"
             />
             <button
@@ -224,7 +224,7 @@ export const AiChatWidget: React.FC = () => {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-xl hover:shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none"
-        aria-label="Mở Trợ lý AI"
+        aria-label="Open Clinical AI Assistant"
       >
         <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

@@ -17,8 +17,8 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
   residentName = "Eleanor Vance",
   careLevel = "Skilled Nursing",
   adlScore = 22,
-  diagnoses = ["Tăng huyết áp", "Suy giảm thăng bằng nhẹ"],
-  recentIncidents = ["Té ngã tại phòng vệ sinh 2 tuần trước"],
+  diagnoses = ["Hypertension", "Mild gait instability"],
+  recentIncidents = ["Unwitnessed bathroom fall 2 weeks ago"],
   onApplyGoals,
   className = "",
 }) => {
@@ -40,14 +40,13 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
         recentIncidents,
       });
       setResult(data);
-      // Mặc định chọn tất cả
       const initialSelected: Record<number, boolean> = {};
       data.suggestedGoals.forEach((_, idx) => {
         initialSelected[idx] = true;
       });
       setSelectedGoals(initialSelected);
     } catch {
-      setError("Không thể kết nối với dịch vụ AI gợi ý kế hoạch. Vui lòng kiểm tra lại dịch vụ Ollama local.");
+      setError("Unable to connect to clinical suggestion service. Please verify local Ollama is active.");
     } finally {
       setLoading(false);
     }
@@ -79,10 +78,10 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
       <button
         type="button"
         onClick={handleOpen}
-        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-sm transition-all duration-150 ${className}`}
+        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all duration-150 ${className}`}
       >
-        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-        <span>🤖 AI Gợi Ý Care Goals</span>
+        <HeartPulse className="w-3.5 h-3.5" />
+        <span>Suggest Care Goals</span>
       </button>
 
       {isOpen && (
@@ -96,10 +95,10 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    AI Gợi Ý Kế Hoạch Chăm Sóc Cá Nhân Hóa
+                    Clinical Decision Support: Suggested Care Goals
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    Dựa trên đánh giá ADL ({adlScore}/28) và hồ sơ sức khỏe của {residentName}
+                    Tailored interventions based on ADL evaluation ({adlScore}/28) for {residentName}
                   </p>
                 </div>
               </div>
@@ -114,7 +113,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
             {/* Resident Brief Tags */}
             <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 text-xs">
               <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-medium">
-                Cấp độ: {careLevel}
+                Care Level: {careLevel}
               </span>
               <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-medium">
                 ADL Score: {adlScore}
@@ -132,7 +131,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                 <div className="py-12 flex flex-col items-center justify-center space-y-3 text-zinc-500">
                   <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
                   <p className="text-xs">
-                    Mô hình AI đang phân tích dữ liệu lâm sàng và thiết lập các can thiệp phù hợp...
+                    Synthesizing clinical indicators and tailoring nursing interventions...
                   </p>
                 </div>
               )}
@@ -187,7 +186,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                                 {goal.description}
                               </p>
                               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-                                💡 <span className="font-semibold">Lý do:</span> {goal.rationale}
+                                <span className="font-semibold">Clinical Rationale:</span> {goal.rationale}
                               </p>
                             </div>
                           </div>
@@ -197,7 +196,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                         {goal.interventions && goal.interventions.length > 0 && (
                           <div className="mt-3 pt-2.5 border-t border-zinc-200/60 dark:border-zinc-700/60 pl-6 space-y-1.5">
                             <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
-                              Biện pháp can thiệp (Interventions)
+                              Planned Nursing Interventions
                             </span>
                             {goal.interventions.map((itv, itvIdx) => (
                               <div
@@ -226,7 +225,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
             {result && !loading && (
               <div className="flex items-center justify-between pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <span className="text-xs text-zinc-500">
-                  Đã chọn {Object.values(selectedGoals).filter(Boolean).length} / {result.suggestedGoals.length} mục tiêu
+                  Selected {Object.values(selectedGoals).filter(Boolean).length} of {result.suggestedGoals.length} goals
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -234,7 +233,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                     onClick={() => setIsOpen(false)}
                     className="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                   >
-                    Hủy bỏ
+                    Cancel
                   </button>
                   <button
                     type="button"
@@ -242,7 +241,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors"
                   >
                     <UserCheck className="w-3.5 h-3.5" />
-                    Áp Dụng Vào Kế Hoạch Chăm Sóc
+                    Apply Selected Goals
                   </button>
                 </div>
               </div>

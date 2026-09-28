@@ -25,7 +25,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
 
   const handleAnalyze = async () => {
     if (!description.trim()) {
-      setError("Vui lòng nhập mô tả sự cố trước khi yêu cầu AI phân tích.");
+      setError("Please enter an incident narrative before requesting clinical analysis.");
       setShowModal(true);
       return;
     }
@@ -42,7 +42,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
       });
       setResult(data);
     } catch {
-      setError("Không thể kết nối với dịch vụ AI phân tích sự cố. Vui lòng kiểm tra lại dịch vụ Ollama local.");
+      setError("Unable to connect to incident assessment service. Please verify local Ollama service.");
     } finally {
       setLoading(false);
     }
@@ -69,14 +69,14 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
         type="button"
         onClick={handleAnalyze}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-sm transition-all duration-150 disabled:opacity-50 ${className}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-all duration-150 disabled:opacity-50 ${className}`}
       >
         {loading ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
         ) : (
-          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
         )}
-        <span>🤖 AI Phân Tích Sự Cố</span>
+        <span>Clinical AI Assessment</span>
       </button>
 
       {/* Suggestion Modal */}
@@ -89,7 +89,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                   <Sparkles className="w-4 h-4 text-indigo-500" />
                 </div>
                 <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Kết Quả Phân Tích Sự Cố Bằng AI
+                  Clinical Incident Severity Assessment
                 </h4>
               </div>
               <button
@@ -103,7 +103,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
             {loading && (
               <div className="py-8 flex flex-col items-center justify-center space-y-2 text-zinc-500">
                 <Loader2 className="w-7 h-7 animate-spin text-indigo-600" />
-                <p className="text-xs">Mô hình AI đang thẩm định và tính toán mức độ nghiêm trọng...</p>
+                <p className="text-xs">Evaluating clinical narrative and classifying severity tier...</p>
               </div>
             )}
 
@@ -119,7 +119,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-semibold">
-                      Mức Độ Gợi Ý
+                      Suggested Severity
                     </span>
                     <span
                       className={`inline-block mt-1 px-2.5 py-0.5 rounded-md text-xs font-bold border ${getSeverityBadgeClass(
@@ -132,7 +132,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
 
                   <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-semibold">
-                      Loại Sự Cố
+                      Incident Type
                     </span>
                     <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
                       {result.suggestedIncidentType}
@@ -142,7 +142,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
 
                 <div className="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40">
                   <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-semibold uppercase tracking-wider flex items-center gap-1">
-                    <Info className="w-3 h-3" /> Lý Do Đánh Giá (AI Rationale)
+                    <Info className="w-3 h-3" /> Clinical Rationale
                   </span>
                   <p className="mt-1 text-zinc-700 dark:text-zinc-300 leading-relaxed">
                     {result.rationale}
@@ -152,7 +152,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                 {result.recommendedActions && result.recommendedActions.length > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider block">
-                      Hành Động Khuyến Nghị Cho Ca Trực
+                      Immediate Clinical Actions
                     </span>
                     <ul className="space-y-1">
                       {result.recommendedActions.map((action, i) => (
@@ -169,8 +169,8 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                 )}
 
                 <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                  <span>Độ tin cậy: {(result.confidence * 100).toFixed(0)}%</span>
-                  <span className="italic">Human-in-the-loop review</span>
+                  <span>Confidence: {(result.confidence * 100).toFixed(0)}%</span>
+                  <span className="italic">Clinical Human-in-the-Loop</span>
                 </div>
               </div>
             )}
@@ -182,7 +182,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                   onClick={() => setShowModal(false)}
                   className="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                 >
-                  Đóng
+                  Close
                 </button>
                 {onApplySuggestion && (
                   <button
@@ -193,7 +193,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                     }}
                     className="px-3.5 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors"
                   >
-                    Áp Dụng Gợi Ý Vào Form
+                    Apply to Report Form
                   </button>
                 )}
               </div>
