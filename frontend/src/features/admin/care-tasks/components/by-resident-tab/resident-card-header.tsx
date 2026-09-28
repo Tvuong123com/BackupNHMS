@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { AiVoiceCareInput } from "@/features/admin/ai/components/ai-voice-care-input";
 
 interface ResidentCardHeaderProps {
   resident: {
@@ -68,6 +69,12 @@ export const ResidentCardHeader = ({ resident }: ResidentCardHeaderProps) => {
           </div>
         </div>
       </div>
+
+      {/* Right — AI Voice Care Input */}
+      <AiVoiceCareInput
+        expectedResidentName={resident.name}
+        expectedRoomNumber={resident.room}
+      />
     </div>
   );
 };

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router";
+import { AiRiskAlertWidget } from "@/features/admin/ai/components/ai-risk-alert-widget";
 
 const DashboardPage = () => {
   const [timeRange] = useState("Today");
@@ -130,6 +131,9 @@ const DashboardPage = () => {
           );
         })}
       </div>
+
+      {/* AI Predictive Risk Alerts */}
+      <AiRiskAlertWidget />
 
       {/* Main Content Grid */}
       <div className="grid gap-8 lg:grid-cols-3">

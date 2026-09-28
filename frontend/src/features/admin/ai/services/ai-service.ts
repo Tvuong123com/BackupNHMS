@@ -27,4 +27,34 @@ export const aiService = {
     );
     return response.data;
   },
+
+  suggestCarePlan: async (
+    request: import("../types/ai.types").CarePlanSuggestionRequest
+  ): Promise<import("../types/ai.types").CarePlanSuggestionResponse> => {
+    const response = await apiClient.post<import("../types/ai.types").CarePlanSuggestionResponse>(
+      "/ai/careplan/suggest",
+      request
+    );
+    return response.data;
+  },
+
+  generateSummary: async (
+    request: import("../types/ai.types").SummaryRequest
+  ): Promise<import("../types/ai.types").SummaryResponse> => {
+    const response = await apiClient.post<import("../types/ai.types").SummaryResponse>(
+      "/ai/summary/generate",
+      request
+    );
+    return response.data;
+  },
+
+  parseVoiceNote: async (
+    request: import("../types/ai.types").VoiceCareParseRequest
+  ): Promise<import("../types/ai.types").VoiceCareParseResponse> => {
+    const response = await apiClient.post<import("../types/ai.types").VoiceCareParseResponse>(
+      "/ai/voice/parse",
+      request
+    );
+    return response.data;
+  },
 };

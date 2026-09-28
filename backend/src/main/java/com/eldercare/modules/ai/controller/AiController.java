@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +22,9 @@ public class AiController {
 
     private final AiChatService aiChatService;
     private final IncidentAiService incidentAiService;
+    private final com.eldercare.modules.ai.careplan.service.CarePlanAiService carePlanAiService;
+    private final com.eldercare.modules.ai.summary.service.SummaryAiService summaryAiService;
+    private final com.eldercare.modules.ai.voice.service.VoiceCareAiService voiceCareAiService;
 
     @Value("${spring.ai.ollama.chat.options.model:qwen3.5:2b-q4_K_M}")
     private String modelName;
@@ -35,6 +39,7 @@ public class AiController {
                 "provider", "OLLAMA_LOCAL",
                 "model", modelName,
                 "endpoint", ollamaBaseUrl,
+                "features", List.of("CHATBOT", "INCIDENT_CLASSIFY", "CARE_PLAN_SUGGEST", "SHIFT_SUMMARY", "VOICE_ASSISTANT"),
                 "message", "ElderCare AI Subsystem is active"
         ));
     }
@@ -47,5 +52,23 @@ public class AiController {
     @PostMapping("/incident/classify")
     public ResponseEntity<IncidentAnalysisResponse> classifyIncident(@RequestBody IncidentAnalysisRequest request) {
         return ResponseEntity.ok(incidentAiService.classifyIncident(request));
+    }
+
+    @PostMapping("/careplan/suggest")
+    public ResponseEntity<com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionResponse> suggestCarePlan(
+            @RequestBody com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionRequest request) {
+        return ResponseEntity.ok(carePlanAiService.suggestCarePlan(request));
+    }
+
+    @PostMapping("/summary/generate")
+    public ResponseEntity<com.eldercare.modules.ai.summary.dto.SummaryResponse> generateSummary(
+            @RequestBody com.eldercare.modules.ai.summary.dto.SummaryRequest request) {
+        return ResponseEntity.ok(summaryAiService.generateSummary(request));
+    }
+
+    @PostMapping("/voice/parse")
+    public ResponseEntity<com.eldercare.modules.ai.voice.dto.VoiceCareParseResponse> parseVoiceNote(
+            @RequestBody com.eldercare.modules.ai.voice.dto.VoiceCareParseRequest request) {
+        return ResponseEntity.ok(voiceCareAiService.parseSpokenCareNote(request));
     }
 }

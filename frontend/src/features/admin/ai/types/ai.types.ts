@@ -29,4 +29,71 @@ export interface AiHealthResponse {
   model: string;
   endpoint: string;
   message: string;
+  features?: string[];
 }
+
+export interface CarePlanSuggestionRequest {
+  residentName?: string;
+  age?: number;
+  gender?: string;
+  careLevel?: string;
+  adlScore?: number;
+  diagnoses?: string[];
+  recentIncidents?: string[];
+  existingGoals?: string[];
+}
+
+export interface SuggestedIntervention {
+  name: string;
+  assignedRole: string;
+}
+
+export interface SuggestedGoal {
+  goalName: string;
+  description: string;
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  rationale: string;
+  interventions: SuggestedIntervention[];
+}
+
+export interface CarePlanSuggestionResponse {
+  residentSummary: string;
+  suggestedGoals: SuggestedGoal[];
+}
+
+export interface SummaryRequest {
+  type?: "SHIFT_HANDOVER" | "INCIDENT_REPORT" | "FAMILY_UPDATE";
+  tone?: "CLINICAL" | "FAMILY_FRIENDLY" | "EXECUTIVE";
+  shiftName?: string;
+  events?: string[];
+  residentName?: string;
+  extraNotes?: string;
+}
+
+export interface SummaryResponse {
+  title: string;
+  narrativeSummary: string;
+  keyHighlights: string[];
+  handoverActionItems: string[];
+  generatedAt: string;
+}
+
+export interface VoiceCareParseRequest {
+  spokenText: string;
+  expectedResidentName?: string;
+  expectedRoomNumber?: string;
+}
+
+export interface VoiceCareParseResponse {
+  residentIdentifier?: string;
+  roomNumber?: string;
+  dietaryIntakePercentage?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRateBpm?: number;
+  bodyTemperatureCelsius?: number;
+  medicationTaken?: boolean;
+  extractedNotes?: string;
+  confidence: number;
+}
+
