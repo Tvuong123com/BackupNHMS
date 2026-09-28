@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { IncidentSeverityResponse } from "../services/incident-severity-service";
+import { AiAnalyzeIncidentButton } from "@/features/admin/ai/components/ai-analyze-incident-button";
 
 interface AddSeverityTabProps {
   newSeverityName: string;
@@ -39,7 +40,18 @@ export const AddSeverityTab = ({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-on-surface mb-2">Description</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-on-surface">Description</label>
+          <AiAnalyzeIncidentButton
+            description={newDescription || newExample}
+            onApplySuggestion={(sug) => {
+              if (!newSeverityName) onSeverityNameChange(sug.suggestedSeverity);
+              if (!newExample && sug.recommendedActions?.length) {
+                onExampleChange(sug.recommendedActions.join("; "));
+              }
+            }}
+          />
+        </div>
         <Input
           type="text"
           value={newDescription}

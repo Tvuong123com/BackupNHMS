@@ -1,6 +1,7 @@
 import { AdminSidebar } from "@/components/layout/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/layout/admin/admin-topbar";
 import { Outlet } from "react-router";
+import { AiChatWidget } from "@/features/admin/ai/components/ai-chat-widget";
 
 export const AdminLayout = () => {
   return (
@@ -12,6 +13,7 @@ export const AdminLayout = () => {
           <Outlet />
         </main>
       </div>
+      <AiChatWidget />
     </div>
   );
 };

@@ -24,6 +24,15 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        enabled: true
+        options:
+          model: ${OLLAMA_CHAT_MODEL:qwen3.5:2b-q4_K_M}
+          temperature: 0.3
+
 app:
   cors:
     allowed-origins: ${ALLOWED_ORIGINS}
