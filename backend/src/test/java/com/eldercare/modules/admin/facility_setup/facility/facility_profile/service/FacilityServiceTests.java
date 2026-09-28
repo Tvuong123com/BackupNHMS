@@ -11,6 +11,8 @@ import com.eldercare.modules.admin.facility_setup.facility.facility_profile.enti
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.mapper.FacilityMapper;
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.repository.FacilityRepository;
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.service.impl.FacilityServiceImpl;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.repository.RoomRepository;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.repository.BedRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -71,6 +73,12 @@ class FacilityServiceTests {
 
     @Mock
     private FacilityMapper facilityMapper;
+
+    @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
+    private BedRepository bedRepository;
 
     @InjectMocks
     private FacilityServiceImpl facilityService;

@@ -19,45 +19,54 @@ public class CarePlanMapper {
                         return null;
 
                 CarePlanEntity newEntity = new CarePlanEntity();
-                newEntity.setCreatedBy(schema.getCreatedBy().getId().intValue());
-                newEntity.setId(schema.getId().intValue());
-                newEntity.setStatus(CarePlanStatusEnum.valueOf(schema.getStatus()));
-                BedEntity bed = schema.getResident().getBed();
-                newEntity.setResident(new CarePlanResidentInfoEntity(
-                                schema.getResident().getId().intValue(),
-                                getResidentFullName(schema.getResident()),
-                                schema.getResident().getDateOfBirth(),
-                                bed != null && bed.getRoom() != null
-                                                ? bed.getRoom().getRoomNumber()
-                                                : null,
-                                bed != null
-                                                ? bed.getBedNumber()
-                                                : null,
-                                schema.getSignificantChangeFlag()));
-                newEntity.setListCareGoal(
-                                schema.getListCareGoal().stream().map(careGoalschema -> new CareGoalEntity(
-                                                careGoalschema.getId().intValue(),
-                                                careGoalschema.getTitle(),
-                                                careGoalschema.getDescription(),
-                                                careGoalschema.getStatus(),
-                                                careGoalschema.getListCareIntervention().stream().map(
-                                                                careInterventionSchema -> new CareInterventionEntity(
-                                                                                careInterventionSchema.getId()
-                                                                                                .intValue(),
-                                                                                careInterventionSchema.getTitle(),
-                                                                                careInterventionSchema
-                                                                                                .getAssignedRole()))
-                                                                .toList()))
-                                                .toList());
+                newEntity.setCreatedBy(schema.getCreatedBy() != null ? schema.getCreatedBy().getId().intValue() : 1);
+                newEntity.setId(schema.getId() != null ? schema.getId().intValue() : 0);
+                if (schema.getStatus() != null) {
+                        try {
+                                newEntity.setStatus(CarePlanStatusEnum.valueOf(schema.getStatus()));
+                        } catch (Exception e) {
+                                newEntity.setStatus(CarePlanStatusEnum.DRAFT);
+                        }
+                }
+                
+                ResidentEntity residentEntity = schema.getResident();
+                if (residentEntity != null) {
+                        BedEntity bed = residentEntity.getBed();
+                        newEntity.setResident(new CarePlanResidentInfoEntity(
+                                        residentEntity.getId() != null ? residentEntity.getId().intValue() : 0,
+                                        getResidentFullName(residentEntity),
+                                        residentEntity.getDateOfBirth(),
+                                        bed != null && bed.getRoom() != null ? bed.getRoom().getRoomNumber() : null,
+                                        bed != null ? bed.getBedNumber() : null,
+                                        Boolean.TRUE.equals(schema.getSignificantChangeFlag())));
+                } else {
+                        newEntity.setResident(new CarePlanResidentInfoEntity(0, "Unknown Resident", null, null, null, false));
+                }
+
+                if (schema.getListCareGoal() != null) {
+                        newEntity.setListCareGoal(
+                                        schema.getListCareGoal().stream().map(careGoalschema -> new CareGoalEntity(
+                                                        careGoalschema.getId() != null ? careGoalschema.getId().intValue() : 0,
+                                                        careGoalschema.getTitle(),
+                                                        careGoalschema.getDescription(),
+                                                        careGoalschema.getStatus(),
+                                                        careGoalschema.getListCareIntervention() != null
+                                                                        ? careGoalschema.getListCareIntervention().stream().map(
+                                                                                        careInterventionSchema -> new CareInterventionEntity(
+                                                                                                        careInterventionSchema.getId() != null ? careInterventionSchema.getId().intValue() : 0,
+                                                                                                        careInterventionSchema.getTitle(),
+                                                                                                        careInterventionSchema.getAssignedRole()))
+                                                                                        .toList()
+                                                                        : List.of()))
+                                                        .toList());
+                }
+
                 newEntity.setCreatedAt(schema.getCreatedAt());
                 newEntity.setUpdatedAt(schema.getUpdatedAt());
-                newEntity.setIsDeleted(schema.getIsDeleted());
-                newEntity.setSignificantFlag(schema.getSignificantChangeFlag());
-                newEntity.setLastReviewDateTime(
-                                schema.getLastReviewedDateTime() == null ? null : schema.getLastReviewedDateTime());
-                newEntity.setLastReviewBy(
-                                schema.getLastReviewedBy() != null ? schema.getLastReviewedBy().getId().toString()
-                                                : null);
+                newEntity.setIsDeleted(Boolean.TRUE.equals(schema.getIsDeleted()));
+                newEntity.setSignificantFlag(Boolean.TRUE.equals(schema.getSignificantChangeFlag()));
+                newEntity.setLastReviewDateTime(schema.getLastReviewedDateTime());
+                newEntity.setLastReviewBy(schema.getLastReviewedBy() != null ? schema.getLastReviewedBy().getId().toString() : null);
 
                 return newEntity;
         }

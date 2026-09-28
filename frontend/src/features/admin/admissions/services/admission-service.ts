@@ -7,7 +7,7 @@ import type {
   AdmissionSelectDTO,
 } from "../types/admission-type";
 
-const BASE_URL = "/admissions";
+const BASE_URL = "/api/v1/admissions";
 
 export interface AdmissionListParams {
   page: number;

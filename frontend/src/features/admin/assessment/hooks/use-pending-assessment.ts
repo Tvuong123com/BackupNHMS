@@ -8,4 +8,6 @@ export const useAssessments = (params: AssessmentListParams) =>
   useQuery({
     queryKey: ["assessments", "list", params],
     queryFn: () => getAssessments(params),
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
   });

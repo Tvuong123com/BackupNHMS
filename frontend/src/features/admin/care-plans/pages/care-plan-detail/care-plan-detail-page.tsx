@@ -5,8 +5,8 @@
 import { useParams, useResolvedPath } from "react-router";
 import CarePlanNavBar from "../../components/care-plan-detail/care-plan-detail-tabs";
 import CarePlanDetailTitle from "../../components/care-plan-detail/care-plan-detail-title";
-import CarePlanTitle from "../../components/care-plan-title";
 import Flag from "../../ui/flag";
+
 import {
   Breadcrumb,
   BreadcrumbItem,

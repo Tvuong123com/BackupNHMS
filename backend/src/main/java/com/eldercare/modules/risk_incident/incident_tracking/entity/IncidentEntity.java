@@ -56,11 +56,12 @@ public class IncidentEntity {
     private OffsetDateTime createdAt;
 
     // --- Bổ sung ở mục 0 ---
-    @Column(name = "incident_location")
+    @Column(name = "incident_location", length = 255)
     private String location;
 
-    @Column(name = "occurred_at")
-    private OffsetDateTime occurredAt;
+    @Column(name = "occurred_at", nullable = false, columnDefinition = "datetimeoffset(0) default sysdatetimeoffset()")
+    @Builder.Default
+    private OffsetDateTime occurredAt = OffsetDateTime.now();
 
     @PrePersist
     void prePersist() {

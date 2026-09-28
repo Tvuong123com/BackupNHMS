@@ -146,6 +146,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         }
 
         @Override
+        @Transactional(readOnly = true)
         public Page<AssessmentResponse> listPaged(Pageable pageable) {
                 return assessRepo.findAll(pageable).map(this::toResponse);
         }

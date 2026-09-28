@@ -3,6 +3,7 @@ import { ByCnaTab } from "../tabs/by-cna-tab";
 import { ByResidentTab } from "../tabs/by-resident-tab";
 import { PERMISSIONS } from "@/common/permissions";
 import { usePermissions } from "@/features/auth/hooks/use-current-user";
+import { ChevronRight } from "lucide-react";
 
 const tabs = [
   {
@@ -24,17 +25,18 @@ const CareTaskPage = () => {
   const visibleTabs = tabs.filter((t) => can(t.permission));
 
   return (
-    <div className="flex flex-col w-full gap-5">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-border pb-5">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[22px] font-semibold tracking-tight text-foreground leading-tight">
-            Care Tasks
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage daily assignments and task execution.
-          </p>
+    <div className="space-y-6">
+      {/* Breadcrumbs & Header */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium">
+          <span>Care Planning</span>
+          <ChevronRight className="size-3 text-slate-300 dark:text-slate-700" />
+          <span className="text-slate-600 dark:text-slate-300">Care Tasks</span>
         </div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Care Tasks</h1>
+        <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">
+          Manage daily assignments and task execution.
+        </p>
       </div>
 
       {/* Tabs */}

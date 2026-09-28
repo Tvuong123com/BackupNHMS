@@ -1,5 +1,4 @@
-import { AlarmClock, Clock, Database, Paperclip } from "lucide-react";
-import Card from "../ui/card";
+import { AlarmClock, Clock, Database, FileText } from "lucide-react";
 import type {
   CarePlan,
   CarePlanMetadata,
@@ -44,43 +43,49 @@ export default function CarePlanStatistical({
       title: "Total plans",
       amount: carePlanMetadata.totalElements,
       icon: Database,
-      className: "bg-blue-100 text-blue-600",
+      iconClass: "bg-blue-50 text-blue-600",
     },
     {
       title: "Draft",
       amount: statistics.draft,
-      icon: Paperclip,
-      className: "bg-gray-100 text-gray-600",
+      icon: FileText,
+      iconClass: "bg-slate-100 text-slate-600",
     },
     {
       title: "Pending Review",
       amount: statistics.pendingReview,
       icon: Clock,
-      className: "bg-yellow-100 text-yellow-600",
+      iconClass: "bg-amber-50 text-amber-600",
     },
     {
       title: "Review Due",
       amount: statistics.reviewDue,
       icon: AlarmClock,
-      className: "bg-orange-100 text-orange-600",
+      iconClass: "bg-red-50 text-red-600",
     },
   ];
 
   return (
-    <div className="flex flex-wrap gap-3 mt-8">
-      {cards.map((card) => (
-        <div className="basis-[calc((100%-36px)/4)] rounded-xl border">
-          <Card
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <div
             key={card.title}
-            icon={card.icon}
-            title={card.title}
-            amount={card.amount.toString()}
-            className={` ${card.className} bg-amber-200`}
-            width="basis-[calc((100%-36px)/4)]"
-            height="h-[120px]"
-          />
-        </div>
-      ))}
+            className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-all hover:border-slate-300 hover:shadow-sm"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`size-11 rounded-full ${card.iconClass} flex items-center justify-center transition-all`}>
+                <Icon className="size-5.5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{card.title}</span>
+                <span className="text-2xl font-bold text-slate-900 mt-0.5">{card.amount}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

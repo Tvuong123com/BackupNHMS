@@ -23,6 +23,7 @@ public class AssessmentEntity {
   private Long id;
   private Integer adlTotalScore;
   private Boolean isOverridden;
+  @Column(name = "override_reason", length = 500)
   private String overrideReason;
   private String status;
   @ManyToOne

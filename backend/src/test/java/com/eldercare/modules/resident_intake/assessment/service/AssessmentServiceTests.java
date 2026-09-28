@@ -251,6 +251,7 @@ public class AssessmentServiceTests {
     AssessmentDecisionRequest req = new AssessmentDecisionRequest();
     req.setStatus("COMPLETED");
     req.setConfirmedCareLevelId(1L);
+    req.setOverrideReason("Confirmed care level differs from suggested");
 
     service.decide(1L, req);
     assertTrue(a.getIsOverridden());

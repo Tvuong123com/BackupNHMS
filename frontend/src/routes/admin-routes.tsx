@@ -16,7 +16,7 @@ import SlaConfigPage from "@/features/admin/sla-config/pages/sla-config-page";
 import SettingPage from "@/features/admin/settings/pages/setting-page";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { PERMISSIONS } from "@/common/permissions";
-import type { RouteObject } from "react-router";
+import { Navigate, type RouteObject } from "react-router";
 import { RequirePermission } from "@/components/common/require-permission";
 import { FacilityDetailPage } from "@/features/admin/facilities/pages/facility-detail-page";
 import DemoDataPage from "@/features/admin/demo-data/pages/demo-data-page";
@@ -28,12 +28,29 @@ import CarePlanDetailPage from "@/features/admin/care-plans/pages/care-plan-deta
 import EquipmentPage from "@/features/admin/inventory/pages/equipment-page";
 
 import { LOCRatesPage } from "@/features/admin/facilities/pages/loc-rates-page";
+import UserPage from "@/features/admin/users/pages/users-page";
 
 export const adminRoutes: RouteObject = {
   path: "/admin",
   element: <AdminLayout />,
   children: [
-    { index: true, element: <DashboardPage /> },
+    { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+    {
+      path: "dashboard",
+      element: (
+        <RequirePermission permission={PERMISSIONS.RESIDENT_VIEW}>
+          <DashboardPage />
+        </RequirePermission>
+      ),
+    },
+    {
+      path: "users",
+      element: (
+        <RequirePermission permission={PERMISSIONS.USER_VIEW}>
+          <UserPage />
+        </RequirePermission>
+      ),
+    },
     {
       path: "roles",
       element: (

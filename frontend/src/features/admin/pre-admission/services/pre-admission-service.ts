@@ -7,7 +7,7 @@ import type {
   PreSelectDTO,
 } from "../types/pre-admission-type";
 
-const BASE_URL = "/pre-admissions";
+const BASE_URL = "/api/v1/pre-admissions";
 
 export interface ScreeningListParams {
   page: number;

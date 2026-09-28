@@ -18,7 +18,7 @@ import com.eldercare.modules.resident_intake.pre_admission.service.PreAdmissionS
 import com.eldercare.modules.resident_intake.resident.repository.ResidentRepository;
 import com.eldercare.modules.resident_intake.resident_profile.ResidentEntity;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -55,11 +55,13 @@ public class PreAdmissionScreeningServiceImpl implements PreAdmissionScreeningSe
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<PreResponse> listPaged(Pageable pageable) {
     return preRepo.findAll(pageable).map(this::toResponse);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<PreSelectDTO> listCompletedForSelect() {
     return preRepo.findByStatusAndIsCurrentTrue("COMPLETED").stream().map(p -> {
       PreSelectDTO dto = new PreSelectDTO();

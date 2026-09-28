@@ -31,7 +31,15 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-// @WebMvcTest(PreAdmissionScreeningController.class)
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
+import com.eldercare.modules.security.SessionStore;
+import com.eldercare.modules.admin.user_management.UserRepository;
+
+import org.springframework.test.context.ActiveProfiles;
+
+@WebMvcTest(PreAdmissionScreeningController.class)
+@ActiveProfiles("test")
 public class PreAdmissionScreeningControllerTests {
 
   @Autowired
@@ -40,6 +48,10 @@ public class PreAdmissionScreeningControllerTests {
   private PreAdmissionScreeningService service;
   @MockitoBean
   private ResidentService residentService;
+  @MockitoBean
+  private SessionStore sessionStore;
+  @MockitoBean
+  private UserRepository userRepository;
   @Autowired
   private ObjectMapper objectMapper;
 

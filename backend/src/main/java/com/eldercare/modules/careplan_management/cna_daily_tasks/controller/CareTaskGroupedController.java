@@ -25,26 +25,26 @@ public class CareTaskGroupedController {
 
     private final CareTaskGroupedService careTaskGroupedService;
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @GetMapping(RouteConstants.API_TASKS_BY_CNA)
     public ResponseEntity<PagedResponse<List<GroupedByCnaCard>>> getTasksByCna(@Valid @ModelAttribute GroupedTaskQuery query) {
         return ResponseEntity.ok(careTaskGroupedService.getTasksByCna(query));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @GetMapping(RouteConstants.API_TASKS_BY_RESIDENT)
     public ResponseEntity<PagedResponse<List<GroupedByResidentCard>>> getTasksByResident(@Valid @ModelAttribute GroupedTaskQuery query) {
         return ResponseEntity.ok(careTaskGroupedService.getTasksByResident(query));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @GetMapping(RouteConstants.API_TASKS_SEARCH)
     public ResponseEntity<PagedResponse<List<EnrichedTaskRow>>> searchTasks(@ModelAttribute TaskSearchFilter filter) {
         Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
         return ResponseEntity.ok(careTaskGroupedService.searchTasks(filter, pageable));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('CNA')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @GetMapping(RouteConstants.API_INTERVENTION_TASKS)
     public ResponseEntity<PagedResponse<List<TaskDetailDto>>> listTasksByIntervention(
             @PathVariable Long interventionId,
@@ -54,7 +54,7 @@ public class CareTaskGroupedController {
         return ResponseEntity.ok(careTaskGroupedService.listTasksByIntervention(interventionId, pageable));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PostMapping(RouteConstants.API_INTERVENTION_TASKS)
     public ResponseEntity<ApiResponse<TaskDetailDto>> createTask(
             @PathVariable Long interventionId,
@@ -63,13 +63,13 @@ public class CareTaskGroupedController {
                 .body(ApiResponse.created("Task created successfully", careTaskGroupedService.createTask(interventionId, request)));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('CNA')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @GetMapping(RouteConstants.API_TASK_BY_ID)
     public ResponseEntity<ApiResponse<TaskDetailDto>> getTaskDetail(@PathVariable Long taskId) {
         return ResponseEntity.ok(ApiResponse.success("Task detail fetched successfully", careTaskGroupedService.getTaskDetail(taskId)));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PutMapping(RouteConstants.API_TASK_BY_ID)
     public ResponseEntity<ApiResponse<TaskDetailDto>> updateTask(
             @PathVariable Long taskId,
@@ -77,14 +77,14 @@ public class CareTaskGroupedController {
         return ResponseEntity.ok(ApiResponse.success("Task updated successfully", careTaskGroupedService.updateTask(taskId, request)));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @DeleteMapping(RouteConstants.API_TASK_BY_ID)
     public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long taskId) {
         careTaskGroupedService.deleteTask(taskId);
         return ResponseEntity.ok(ApiResponse.success("Task deleted successfully", null));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PatchMapping(RouteConstants.API_TASK_ASSIGN_CNA)
     public ResponseEntity<ApiResponse<TaskDetailDto>> assignCna(
             @PathVariable Long taskId,
@@ -92,7 +92,7 @@ public class CareTaskGroupedController {
         return ResponseEntity.ok(ApiResponse.success("CNA assigned successfully", careTaskGroupedService.assignCna(taskId, request.getAssignedCnaId())));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('CNA')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PatchMapping(RouteConstants.API_TASK_COMPLETED)
     public ResponseEntity<ApiResponse<TaskDetailDto>> completeTask(
             @PathVariable Long taskId,
@@ -100,13 +100,13 @@ public class CareTaskGroupedController {
         return ResponseEntity.ok(ApiResponse.success("Task completed successfully", careTaskGroupedService.completeTask(taskId, request.getCompletedAt())));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('CNA')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PatchMapping(RouteConstants.API_TASK_MISSED)
     public ResponseEntity<ApiResponse<TaskDetailDto>> markMissed(@PathVariable Long taskId) {
         return ResponseEntity.ok(ApiResponse.success("Task marked missed successfully", careTaskGroupedService.markMissed(taskId)));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('CNA')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PatchMapping(RouteConstants.API_TASK_FLAG_ABNORMAL)
     public ResponseEntity<ApiResponse<TaskDetailDto>> flagAbnormal(
             @PathVariable Long taskId,
@@ -114,7 +114,7 @@ public class CareTaskGroupedController {
         return ResponseEntity.ok(ApiResponse.success("Task abnormality updated successfully", careTaskGroupedService.flagAbnormal(taskId, request.getIsAbnormalFlagged())));
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE', 'CNA')")
     @PatchMapping(RouteConstants.API_TASK_RESCHEDULE)
     public ResponseEntity<ApiResponse<TaskDetailDto>> rescheduleTask(
             @PathVariable Long taskId,

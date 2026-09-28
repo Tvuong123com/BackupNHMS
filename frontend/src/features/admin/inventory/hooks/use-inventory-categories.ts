@@ -29,6 +29,7 @@ export function useInventoryCategories(selectedCategoryId?: number | null) {
 
   const categoriesQuery = useQuery({
     queryKey: categoriesQueryKey,
+    retry: false,
     queryFn: async () => {
       const response = await inventoryCategoryApi.getInventoryCategories({ page: 0, size: 100 });
       return mapCategoryList(response.data);
@@ -38,6 +39,7 @@ export function useInventoryCategories(selectedCategoryId?: number | null) {
   const categoryDetailQuery = useQuery({
     queryKey: [...categoriesQueryKey, selectedCategoryId],
     enabled: selectedCategoryId != null,
+    retry: false,
     queryFn: async () => {
       const response = await inventoryCategoryApi.getInventoryCategoryById(selectedCategoryId as number);
       return mapCategoryResponse(response.data);

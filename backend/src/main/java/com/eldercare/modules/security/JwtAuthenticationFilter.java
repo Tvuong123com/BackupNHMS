@@ -35,12 +35,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 sessionStore.updateActivity(token);
 
                 String role = session.getRole();
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                java.util.List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+                if (role != null) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role.replace(" ", "_")));
+                    authorities.add(new SimpleGrantedAuthority(role));
+                    // Grant admin access for system admin/nha admin/admin
+                    if (role.equalsIgnoreCase("System_Administrator") || role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("NHA_ADMIN") || role.contains("Admin")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_System_Administrator"));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_NHA_Admin"));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_NHA_ADMIN"));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_DON"));
+                    }
+                }
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         session.getEmail(),
                         null,
-                        Collections.singletonList(authority));
+                        authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

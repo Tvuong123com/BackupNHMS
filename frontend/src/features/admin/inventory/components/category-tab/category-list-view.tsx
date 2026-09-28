@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { CategoryItem } from "../../tabs/category-tab";
+import type { CategoryItem } from "../../store/use-inventory-category-store";
 
 interface CategoryListViewProps {
   categories: CategoryItem[];

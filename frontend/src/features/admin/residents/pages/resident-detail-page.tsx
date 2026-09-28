@@ -56,7 +56,7 @@ const ResidentDetailPage = () => {
       value: "care-level-history",
       label: "Care Level History",
       permission: PERMISSIONS.RESIDENT_VIEW,
-      content: <CareLevelHistoryTab residentId={id || ""} />,
+      content: <CareLevelHistoryTab />,
     },
     {
       value: "loc-result",

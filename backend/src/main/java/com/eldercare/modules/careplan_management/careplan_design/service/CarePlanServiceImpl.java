@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -97,26 +98,29 @@ public class CarePlanServiceImpl implements ICarePlanService {
         @Override
         @Transactional()
         public PagedResponse<ListCarePlanResponseDTO> listCarePlans(ListCarePlanRequestDTO requestDTO) {
-                // List<CarePlanEntity> listCarePlanEntity =
-                // carePlanRepository.getAll(requestDTO);
                 Page<CarePlanEntity> pageCarePlanEntity = carePlanRepository.getAllPagination(requestDTO);
                 List<CarePlanEntity> listCarePlanEntity = pageCarePlanEntity.getContent();
                 List<Long> userIds = listCarePlanEntity.stream()
-                                .map(entity -> Long.valueOf(entity.getCreatedBy()))
+                                .map(entity -> (long) entity.getCreatedBy())
                                 .distinct()
                                 .toList();
 
-                List<UserEntity> authors = this.carePlanRepository.getListUserByIDs(userIds);
+                List<UserEntity> authors = userIds.isEmpty() ? List.of() : this.carePlanRepository.getListUserByIDs(userIds);
 
                 Map<Long, UserEntity> authorMap = authors.stream()
                                 .collect(Collectors.toMap(
                                                 UserEntity::getId,
-                                                Function.identity()));
+                                                Function.identity(),
+                                                (existing, replacement) -> existing));
+
                 List<Long> residentIds = listCarePlanEntity.stream()
-                                .map(entity -> Long.valueOf(entity.getResident().getId()))
+                                .map(entity -> entity.getResident() != null ? (long) entity.getResident().getId() : null)
+                                .filter(Objects::nonNull)
                                 .distinct()
                                 .toList();
-                Map<Long, Integer> locTierMap = this.carePlanRepository.getLOCTierFromResidentIds(residentIds);
+
+                Map<Long, Integer> locTierMap = residentIds.isEmpty() ? Map.of() : this.carePlanRepository.getLOCTierFromResidentIds(residentIds);
+
                 List<CarePlanOutput> listCarePlanOutputs = listCarePlanEntity.stream()
                                 .map(entity -> {
                                         CarePlanOutput output = new CarePlanOutput();
@@ -139,10 +143,11 @@ public class CarePlanServiceImpl implements ICarePlanService {
 
                                         output.cycle = 90;
                                         output.resident = new CarePlanOutput.CarePlanResidentOutput(
-                                                        entity.getResident().getId(),
-                                                        entity.getResident().getFullname(),
-                                                        entity.getResident().getDob().toString());
-                                        if (entity.getResident().getRoom() == null
+                                                        entity.getResident() != null ? entity.getResident().getId() : 0,
+                                                        entity.getResident() != null ? entity.getResident().getFullname() : "Unknown",
+                                                        entity.getResident() != null && entity.getResident().getDob() != null ? entity.getResident().getDob().toString() : "1950-01-01");
+
+                                        if (entity.getResident() == null || entity.getResident().getRoom() == null
                                                         || entity.getResident().getBed() == null) {
 
                                                 output.definition = new CarePlanOutput.CarePlanResidentDefinitionOutput(
@@ -154,16 +159,24 @@ public class CarePlanServiceImpl implements ICarePlanService {
                                                                 entity.getResident().getRoom(),
                                                                 entity.getResident().getBed());
                                         }
-                                        output.LOCTier = locTierMap.getOrDefault(
-                                                        Long.valueOf(entity.getResident().getId()),
-                                                        0);
-                                        ;
-                                        output.goalCount = entity.getListCareGoal().size();
-                                        UserEntity author = authorMap.get(Long.valueOf(entity.getCreatedBy()));
-                                        output.createdBy = new CarePlanOutput.CarePlanAuthorOutput(
-                                                        author.getId().intValue(),
-                                                        author.getFirstName(),
-                                                        author.getRole().getRoleName());
+
+                                        long resId = entity.getResident() != null ? (long) entity.getResident().getId() : 0L;
+                                        output.LOCTier = locTierMap.getOrDefault(resId, 1);
+                                        output.goalCount = entity.getListCareGoal() != null ? entity.getListCareGoal().size() : 0;
+                                        
+                                        UserEntity author = authorMap.get((long) entity.getCreatedBy());
+                                        if (author != null) {
+                                                output.createdBy = new CarePlanOutput.CarePlanAuthorOutput(
+                                                                author.getId().intValue(),
+                                                                author.getFirstName() + " " + author.getLastName(),
+                                                                author.getRole() != null ? author.getRole().getRoleName() : "STAFF");
+                                        } else {
+                                                output.createdBy = new CarePlanOutput.CarePlanAuthorOutput(
+                                                                entity.getCreatedBy(),
+                                                                "User #" + entity.getCreatedBy(),
+                                                                "ADMIN");
+                                        }
+
                                         output.interventionCount = 0;
                                         output.createdAt = entity.getCreatedAt() == null
                                                         ? null
@@ -490,6 +503,15 @@ public class CarePlanServiceImpl implements ICarePlanService {
                 DeleteCarePlanResponseDTO responseDTo = new DeleteCarePlanResponseDTO(
                                 carePlanEntityAfterUpdated.getId(), carePlanEntityAfterUpdated.getIsDeleted());
                 return responseDTo;
+        }
+
+        private Long parseLongSafely(String val) {
+                if (val == null || val.trim().isEmpty()) return null;
+                try {
+                        return Long.valueOf(val.trim());
+                } catch (Exception e) {
+                        return null;
+                }
         }
 
 }

@@ -24,7 +24,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON')")
     @GetMapping(RouteConstants.ADMIN_API_PREFIX + "/users")
     public ResponseEntity<Page<UserResponse>> getUsers(
             @RequestParam(required = false) String keyword,
@@ -48,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok(cnas);
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON')")
     @GetMapping(RouteConstants.ADMIN_API_PREFIX + "/users/{id}")
     public ResponseEntity<UserDetailResponse> getUserById(
             @PathVariable Long id) {
@@ -58,7 +58,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON')")
     @PostMapping(RouteConstants.ADMIN_API_PREFIX + "/users")
     public ResponseEntity<UserDetailResponse> createUser(
             @Valid @RequestBody CreateUserRequest request) {
@@ -70,7 +70,7 @@ public class UserController {
                 .body(createdUser);
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON')")
     @PutMapping(RouteConstants.ADMIN_API_PREFIX + "/users/{id}")
     public ResponseEntity<UserDetailResponse> updateUser(
             @PathVariable Long id,
@@ -81,7 +81,7 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON')")
     @PatchMapping(RouteConstants.ADMIN_API_PREFIX + "/users/{id}/status")
     public ResponseEntity<UserDetailResponse> changeUserStatus(
             @PathVariable Long id,
