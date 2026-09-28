@@ -12,11 +12,13 @@ import com.eldercare.modules.ai.voice.service.VoiceCareAiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import com.eldercare.modules.ai.engine.AiExecutionService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ai.chat.client.ChatClient;
 
 import java.util.List;
 
@@ -26,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CarePlanAndSummaryAiTest {
 
     @Mock
-    private ChatClient chatClient;
+    private AiExecutionService aiExecutionService;
 
     private CarePlanAiService carePlanAiService;
     private SummaryAiService summaryAiService;
@@ -35,9 +37,9 @@ class CarePlanAndSummaryAiTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        carePlanAiService = new CarePlanAiService(chatClient, objectMapper);
-        summaryAiService = new SummaryAiService(chatClient, objectMapper);
-        voiceCareAiService = new VoiceCareAiService(chatClient, objectMapper);
+        carePlanAiService = new CarePlanAiService(aiExecutionService, objectMapper);
+        summaryAiService = new SummaryAiService(aiExecutionService, objectMapper);
+        voiceCareAiService = new VoiceCareAiService(aiExecutionService, objectMapper);
     }
 
     @Test

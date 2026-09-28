@@ -6,6 +6,9 @@ import com.eldercare.modules.ai.chat.service.AiChatService;
 import com.eldercare.modules.ai.incident.dto.IncidentAnalysisRequest;
 import com.eldercare.modules.ai.incident.dto.IncidentAnalysisResponse;
 import com.eldercare.modules.ai.incident.service.IncidentAiService;
+import com.eldercare.modules.ai.engine.AiSettingsDto;
+import com.eldercare.modules.ai.engine.AiSettingsService;
+import com.eldercare.modules.ai.engine.AiTestResultDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -27,20 +30,31 @@ public class AiController {
     private final com.eldercare.modules.ai.voice.service.VoiceCareAiService voiceCareAiService;
     private final com.eldercare.modules.ai.medication.service.MedicationSafetyAiService medicationSafetyAiService;
     private final com.eldercare.modules.ai.elopement.service.ElopementRiskAiService elopementRiskAiService;
+    private final AiSettingsService aiSettingsService;
 
-    @Value("${spring.ai.ollama.chat.options.model:qwen3.5:2b-q4_K_M}")
-    private String modelName;
+    @GetMapping("/settings")
+    public ResponseEntity<AiSettingsDto> getSettings() {
+        return ResponseEntity.ok(aiSettingsService.getPublicSettings());
+    }
 
-    @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
-    private String ollamaBaseUrl;
+    @PutMapping("/settings")
+    public ResponseEntity<AiSettingsDto> updateSettings(@RequestBody AiSettingsDto newSettings) {
+        return ResponseEntity.ok(aiSettingsService.updateSettings(newSettings));
+    }
+
+    @PostMapping("/settings/test")
+    public ResponseEntity<AiTestResultDto> testConnection(@RequestBody AiSettingsDto testConfig) {
+        return ResponseEntity.ok(aiSettingsService.testConnection(testConfig));
+    }
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
+        AiSettingsDto s = aiSettingsService.getSettings();
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
-                "provider", "OLLAMA_LOCAL",
-                "model", modelName,
-                "endpoint", ollamaBaseUrl,
+                "provider", s.getProvider(),
+                "model", s.getProvider().equals("GOOGLE_GEMINI") ? s.getGeminiModel() : s.getOllamaModel(),
+                "endpoint", s.getProvider().equals("GOOGLE_GEMINI") ? "Google AI Studio Cloud" : s.getOllamaBaseUrl(),
                 "features", List.of(
                         "CHATBOT",
                         "INCIDENT_CLASSIFY",
@@ -50,7 +64,7 @@ public class AiController {
                         "MEDICATION_SAFETY",
                         "ELOPEMENT_RISK"
                 ),
-                "message", "ElderCare AI Subsystem is active"
+                "message", "ElderCare AI Subsystem is active (" + s.getProvider() + ")"
         ));
     }
 

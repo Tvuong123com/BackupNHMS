@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.voice.service;
 
 import com.eldercare.modules.ai.voice.dto.VoiceCareParseRequest;
 import com.eldercare.modules.ai.voice.dto.VoiceCareParseResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class VoiceCareAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String VOICE_PARSE_SYSTEM_PROMPT = """
@@ -48,11 +48,7 @@ public class VoiceCareAiService {
                 prompt.append("Phòng dự kiến: ").append(request.getExpectedRoomNumber()).append("\n");
             }
 
-            String raw = chatClient.prompt()
-                    .system(VOICE_PARSE_SYSTEM_PROMPT)
-                    .user(prompt.toString())
-                    .call()
-                    .content();
+            String raw = aiExecutionService.execute(VOICE_PARSE_SYSTEM_PROMPT, prompt.toString());
 
             log.info("AI Voice note parse raw response: {}", raw);
             return parseJsonResponse(raw, request);

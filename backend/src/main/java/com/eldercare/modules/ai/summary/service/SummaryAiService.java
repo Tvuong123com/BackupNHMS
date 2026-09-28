@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.summary.service;
 
 import com.eldercare.modules.ai.summary.dto.SummaryRequest;
 import com.eldercare.modules.ai.summary.dto.SummaryResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SummaryAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String SUMMARY_SYSTEM_PROMPT = """
@@ -55,13 +55,12 @@ public class SummaryAiService {
                 prompt.append("Ghi chú thêm: ").append(request.getExtraNotes()).append("\n");
             }
 
-            String raw = chatClient.prompt()
-                    .system(SUMMARY_SYSTEM_PROMPT)
-                    .user(prompt.toString())
-                    .call()
-                    .content();
+            String raw = aiExecutionService.execute(SUMMARY_SYSTEM_PROMPT, prompt.toString());
 
             log.info("AI Summary raw response: {}", raw);
+            if (raw == null || raw.isBlank()) {
+                return createFallbackSummary(request);
+            }
             SummaryResponse response = parseSummaryResponse(raw);
             response.setGeneratedAt(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
             return response;

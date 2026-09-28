@@ -7,13 +7,13 @@ import com.eldercare.modules.ai.medication.dto.MedicationCheckRequest;
 import com.eldercare.modules.ai.medication.dto.MedicationCheckResponse;
 import com.eldercare.modules.ai.medication.service.MedicationSafetyAiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ai.chat.client.ChatClient;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MedicationAndElopementAiTest {
 
     @Mock
-    private ChatClient chatClient;
+    private AiExecutionService aiExecutionService;
 
     private MedicationSafetyAiService medicationSafetyAiService;
     private ElopementRiskAiService elopementRiskAiService;
@@ -31,8 +31,8 @@ class MedicationAndElopementAiTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        medicationSafetyAiService = new MedicationSafetyAiService(chatClient, objectMapper);
-        elopementRiskAiService = new ElopementRiskAiService(chatClient, objectMapper);
+        medicationSafetyAiService = new MedicationSafetyAiService(aiExecutionService, objectMapper);
+        elopementRiskAiService = new ElopementRiskAiService(aiExecutionService, objectMapper);
     }
 
     @Test

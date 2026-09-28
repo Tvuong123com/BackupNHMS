@@ -97,3 +97,23 @@ export interface VoiceCareParseResponse {
   confidence: number;
 }
 
+export interface AiSettings {
+  provider: "LOCAL_OLLAMA" | "GOOGLE_GEMINI";
+  geminiApiKey?: string;
+  geminiModel?: string;
+  ollamaBaseUrl?: string;
+  ollamaModel?: string;
+  temperature?: number;
+  maxTokens?: number;
+  systemRules?: string;
+  features?: Record<string, boolean>;
+}
+
+export interface AiTestResult {
+  success: boolean;
+  latencyMs: number;
+  provider: string;
+  model: string;
+  message: string;
+}
+

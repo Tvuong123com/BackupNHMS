@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.chat.service;
 
 import com.eldercare.modules.ai.chat.dto.AiChatRequest;
 import com.eldercare.modules.ai.chat.dto.AiChatResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
+import com.eldercare.modules.ai.engine.AiSettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,33 +13,32 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AiChatService {
 
-    private final ChatClient chatClient;
-
-    @Value("${spring.ai.ollama.chat.options.model:qwen3.5:2b-q4_K_M}")
-    private String modelName;
+    private final AiExecutionService aiExecutionService;
+    private final AiSettingsService settingsService;
 
     public AiChatResponse chat(AiChatRequest request) {
         try {
             String prompt = request.getMessage();
             if (request.getContext() != null && !request.getContext().isBlank()) {
-                prompt = "Ngữ cảnh hồ sơ cư dân / hệ thống:\n" + request.getContext() + "\n\nCâu hỏi: " + request.getMessage();
+                prompt = "Resident / Facility Context:\n" + request.getContext() + "\n\nQuestion: " + request.getMessage();
             }
 
-            String reply = chatClient.prompt()
-                    .user(prompt)
-                    .call()
-                    .content();
+            String reply = aiExecutionService.execute(null, prompt);
+
+            String activeModel = settingsService.getSettings().getProvider().equals("GOOGLE_GEMINI")
+                    ? settingsService.getSettings().getGeminiModel()
+                    : settingsService.getSettings().getOllamaModel();
 
             return AiChatResponse.builder()
                     .reply(reply)
-                    .model(modelName)
+                    .model(activeModel)
                     .success(true)
                     .build();
         } catch (Exception e) {
-            log.error("Lỗi khi gọi AI Chat Service: {}", e.getMessage(), e);
+            log.error("AI Chat error: {}", e.getMessage(), e);
             return AiChatResponse.builder()
-                    .reply("Xin lỗi, hiện tại hệ thống AI đang bận hoặc không thể kết nối tới mô hình AI (" + e.getMessage() + "). Vui lòng thử lại sau.")
-                    .model(modelName)
+                    .reply("The AI assistant encountered an error (" + e.getMessage() + "). Please verify AI settings or try again.")
+                    .model("unknown")
                     .success(false)
                     .build();
         }

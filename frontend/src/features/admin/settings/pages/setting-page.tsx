@@ -15,11 +15,12 @@ import {
   RefreshCw,
   Mail,
   Phone,
-  MapPin,
   Flame,
+  Cpu,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PermissionTab } from "../tabs/permission-tab";
+import { AiTab } from "../tabs/ai-tab";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,12 @@ const SettingPage = () => {
             className="flex items-center gap-2 pb-3 pt-2 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 bg-transparent data-[state=active]:text-indigo-600 data-active:text-indigo-600 data-[state=active]:after:bg-indigo-600 data-active:after:bg-indigo-600 rounded-none shadow-none cursor-pointer"
           >
             <ShieldCheck className="h-4 w-4 mb-0.5" /> Permission Matrix
+          </TabsTrigger>
+          <TabsTrigger
+            value="ai"
+            className="flex items-center gap-2 pb-3 pt-2 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 bg-transparent data-[state=active]:text-blue-600 data-active:text-blue-600 data-[state=active]:after:bg-blue-600 data-active:after:bg-blue-600 rounded-none shadow-none cursor-pointer"
+          >
+            <Cpu className="h-4 w-4 mb-0.5 text-blue-500" /> AI & Model Engine
           </TabsTrigger>
         </TabsList>
 
@@ -436,6 +443,11 @@ const SettingPage = () => {
         {/* 5. Permission Matrix Tab */}
         <TabsContent value="permissions" className="mt-6">
           <PermissionTab />
+        </TabsContent>
+
+        {/* 6. AI Engine & Model Architecture Tab */}
+        <TabsContent value="ai" className="mt-6">
+          <AiTab />
         </TabsContent>
       </Tabs>
     </div>

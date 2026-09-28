@@ -57,4 +57,27 @@ export const aiService = {
     );
     return response.data;
   },
+
+  getSettings: async (): Promise<import("../types/ai.types").AiSettings> => {
+    const response = await apiClient.get<import("../types/ai.types").AiSettings>("/ai/settings");
+    return response.data;
+  },
+
+  updateSettings: async (
+    settings: import("../types/ai.types").AiSettings
+  ): Promise<import("../types/ai.types").AiSettings> => {
+    const response = await apiClient.put<import("../types/ai.types").AiSettings>("/ai/settings", settings);
+    return response.data;
+  },
+
+  testConnection: async (
+    settings?: Partial<import("../types/ai.types").AiSettings>
+  ): Promise<import("../types/ai.types").AiTestResult> => {
+    const response = await apiClient.post<import("../types/ai.types").AiTestResult>(
+      "/ai/settings/test",
+      settings || {}
+    );
+    return response.data;
+  },
 };
+

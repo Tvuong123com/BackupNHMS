@@ -28,7 +28,8 @@ public class AiConfig {
                 .ollamaApi(ollamaApi)
                 .defaultOptions(OllamaOptions.builder()
                         .model(modelName)
-                        .temperature(0.3)
+                        .temperature(0.2)
+                        .numPredict(512)
                         .build())
                 .build();
     }

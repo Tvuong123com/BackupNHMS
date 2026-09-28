@@ -8,9 +8,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.eldercare.modules.ai.engine.AiExecutionService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ai.chat.client.ChatClient;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class IncidentAiServiceTest {
 
     @Mock
-    private ChatClient chatClient;
+    private AiExecutionService aiExecutionService;
 
     private IncidentAiService incidentAiService;
 
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        incidentAiService = new IncidentAiService(chatClient, objectMapper);
+        incidentAiService = new IncidentAiService(aiExecutionService, objectMapper);
     }
 
     @Test

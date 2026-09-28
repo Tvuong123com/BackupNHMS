@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.careplan.service;
 
 import com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionRequest;
 import com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarePlanAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String CARE_PLAN_SYSTEM_PROMPT = """
@@ -66,11 +66,7 @@ public class CarePlanAiService {
                 prompt.append("Các mục tiêu đã có: ").append(String.join(", ", request.getExistingGoals())).append("\n");
             }
 
-            String raw = chatClient.prompt()
-                    .system(CARE_PLAN_SYSTEM_PROMPT)
-                    .user(prompt.toString())
-                    .call()
-                    .content();
+            String raw = aiExecutionService.execute(CARE_PLAN_SYSTEM_PROMPT, prompt.toString());
 
             log.info("AI Care Plan suggestion raw response: {}", raw);
             return parseCarePlanResponse(raw, request);

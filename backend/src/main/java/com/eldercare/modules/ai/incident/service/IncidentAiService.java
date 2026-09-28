@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.incident.service;
 
 import com.eldercare.modules.ai.incident.dto.IncidentAnalysisRequest;
 import com.eldercare.modules.ai.incident.dto.IncidentAnalysisResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IncidentAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String CLASSIFY_SYSTEM_PROMPT = """
@@ -49,22 +49,22 @@ public class IncidentAiService {
                 userPrompt.append("Địa điểm xảy ra: ").append(request.getLocation()).append("\n");
             }
 
-            String rawResponse = chatClient.prompt()
-                    .system(CLASSIFY_SYSTEM_PROMPT)
-                    .user(userPrompt.toString())
-                    .call()
-                    .content();
+            String rawResponse = aiExecutionService.execute(CLASSIFY_SYSTEM_PROMPT, userPrompt.toString());
 
             log.info("AI raw classification response: {}", rawResponse);
 
-            return parseJsonResponse(rawResponse);
+            if (rawResponse == null || rawResponse.isBlank()) {
+                return createFallbackResponse(request.getDescription());
+            }
+
+            return parseJsonResponse(rawResponse, request.getDescription());
         } catch (Exception e) {
             log.error("Lỗi khi phân loại sự cố bằng AI: {}", e.getMessage(), e);
             return createFallbackResponse(request.getDescription());
         }
     }
 
-    private IncidentAnalysisResponse parseJsonResponse(String rawResponse) {
+    private IncidentAnalysisResponse parseJsonResponse(String rawResponse, String description) {
         try {
             String json = rawResponse.trim();
             // Trích xuất JSON nếu LLM trả về markdown block ```json ... ```
@@ -85,7 +85,7 @@ public class IncidentAiService {
             return objectMapper.readValue(json, IncidentAnalysisResponse.class);
         } catch (Exception e) {
             log.warn("Không thể parse trực tiếp JSON từ AI response, áp dụng fallback phân tích cơ bản: {}", e.getMessage());
-            return createFallbackResponse(rawResponse);
+            return createFallbackResponse(description);
         }
     }
 

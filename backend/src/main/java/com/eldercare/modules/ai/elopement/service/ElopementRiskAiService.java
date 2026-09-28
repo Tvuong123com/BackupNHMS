@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.elopement.service;
 
 import com.eldercare.modules.ai.elopement.dto.ElopementRiskRequest;
 import com.eldercare.modules.ai.elopement.dto.ElopementRiskResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ElopementRiskAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String ELOPEMENT_SYSTEM_PROMPT = """
@@ -47,11 +47,7 @@ public class ElopementRiskAiService {
                 prompt.append("Thời điểm: ").append(request.getTimeOfDay()).append("\n");
             }
 
-            String raw = chatClient.prompt()
-                    .system(ELOPEMENT_SYSTEM_PROMPT)
-                    .user(prompt.toString())
-                    .call()
-                    .content();
+            String raw = aiExecutionService.execute(ELOPEMENT_SYSTEM_PROMPT, prompt.toString());
 
             log.info("AI Elopement risk evaluation raw response: {}", raw);
             return parseJsonResponse(raw, request);

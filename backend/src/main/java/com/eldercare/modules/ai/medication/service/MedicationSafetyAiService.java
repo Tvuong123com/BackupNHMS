@@ -2,10 +2,10 @@ package com.eldercare.modules.ai.medication.service;
 
 import com.eldercare.modules.ai.medication.dto.MedicationCheckRequest;
 import com.eldercare.modules.ai.medication.dto.MedicationCheckResponse;
+import com.eldercare.modules.ai.engine.AiExecutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MedicationSafetyAiService {
 
-    private final ChatClient chatClient;
+    private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
 
     private static final String MED_SAFETY_SYSTEM_PROMPT = """
@@ -58,11 +58,7 @@ public class MedicationSafetyAiService {
                 prompt.append("Bệnh lý nền: ").append(String.join(", ", request.getMedicalConditions())).append("\n");
             }
 
-            String raw = chatClient.prompt()
-                    .system(MED_SAFETY_SYSTEM_PROMPT)
-                    .user(prompt.toString())
-                    .call()
-                    .content();
+            String raw = aiExecutionService.execute(MED_SAFETY_SYSTEM_PROMPT, prompt.toString());
 
             log.info("AI Medication safety check raw response: {}", raw);
             return parseJsonResponse(raw, request);
