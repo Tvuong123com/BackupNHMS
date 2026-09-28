@@ -13,7 +13,7 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor: Attach JWT token if it exists in local storage
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem(API_CONSTANTS.TOKEN_KEY);
+    const token = localStorage.getItem("token") || localStorage.getItem(API_CONSTANTS.TOKEN_KEY);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

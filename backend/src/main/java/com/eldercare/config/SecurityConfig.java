@@ -31,7 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/residents/**", "/api/v1/demo-data-seeder/**").permitAll()
-                .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("System_Administrator", "NHA_Admin")
+                .requestMatchers("/admin/**", "/api/v1/admin/**", "/api/v1/care-plans/**", "/api/v1/tasks/**", "/api/v1/**").hasAnyRole("System_Administrator", "ADMIN", "NHA_Admin", "NHA_ADMIN", "DON", "NURSE", "CNA")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

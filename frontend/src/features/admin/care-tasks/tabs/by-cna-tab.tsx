@@ -13,7 +13,7 @@ import { format } from "date-fns";
 
 export const ByCnaTab = () => {
   const [page, setPage] = useState(0);
-  const [date, setDate] = useState<Date | undefined>(new Date("2026-07-14"));
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [status, setStatus] = useState<string>("all");
   const [taskType, setTaskType] = useState<string>("all");
   const [flag, setFlag] = useState<string>("all");

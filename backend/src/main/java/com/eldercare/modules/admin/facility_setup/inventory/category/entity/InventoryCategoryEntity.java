@@ -19,8 +19,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "inventory_categories")
@@ -29,7 +30,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @SQLDelete(sql = "UPDATE inventory_categories SET is_deleted = 1 WHERE id = ?")
 @SQLRestriction("is_deleted = 0")
-@Data
+@Getter
+@Setter
 public class InventoryCategoryEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

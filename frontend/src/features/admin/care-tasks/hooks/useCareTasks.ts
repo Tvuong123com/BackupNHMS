@@ -9,11 +9,15 @@ export function useCareTasks(params?: GroupedTaskQueryParams) {
   const { data: cnaGroupsData, isLoading: isLoadingCnaGroups, error: errorCnaGroups } = useQuery({
     queryKey: ["care-tasks-by-cna", params],
     queryFn: () => careTasksApi.getTasksByCna(params),
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: residentGroupsData, isLoading: isLoadingResidentGroups, error: errorResidentGroups } = useQuery({
     queryKey: ["care-tasks-by-resident", params],
     queryFn: () => careTasksApi.getTasksByResident(params),
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
   });
 
   const invalidateQueries = () => {

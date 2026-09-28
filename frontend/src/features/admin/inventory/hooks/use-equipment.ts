@@ -59,6 +59,7 @@ export function useEquipment(selectedEquipmentId?: number | null) {
 
   const equipmentQuery = useQuery({
     queryKey: equipmentQueryKey,
+    retry: false,
     queryFn: async () => {
       const response = await equipmentApi.getEquipment({ page: 0, size: 100 });
       return mapEquipmentList(response.data);
@@ -68,6 +69,7 @@ export function useEquipment(selectedEquipmentId?: number | null) {
   const equipmentDetailQuery = useQuery({
     queryKey: [...equipmentQueryKey, selectedEquipmentId],
     enabled: selectedEquipmentId != null,
+    retry: false,
     queryFn: async () => {
       const response = await equipmentApi.getEquipmentById(selectedEquipmentId as number);
       return mapEquipmentResponse(response.data);
@@ -76,6 +78,7 @@ export function useEquipment(selectedEquipmentId?: number | null) {
 
   const categoriesQuery = useQuery({
     queryKey: [...equipmentOptionsQueryKey, "categories"],
+    retry: false,
     queryFn: async () => {
       const response = await inventoryCategoryApi.getInventoryCategories({ page: 0, size: 100 });
       return mapCategoryOptions(response.data);
@@ -84,6 +87,7 @@ export function useEquipment(selectedEquipmentId?: number | null) {
 
   const facilitiesQuery = useQuery({
     queryKey: [...equipmentOptionsQueryKey, "facilities"],
+    retry: false,
     queryFn: async () => {
       const response = await facilitiesApi.getFacilities(0, 100);
       return mapFacilityOptions(response.data);

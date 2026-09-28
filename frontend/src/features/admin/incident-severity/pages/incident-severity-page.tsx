@@ -12,9 +12,44 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddSeverityTab } from "../tabs/add-severity-tab";
 
-const defaultSeverityContent = {
-  description: "Description unavailable.",
-  example: "Example unavailable.",
+const getDefaultDescription = (levelName: string) => {
+  switch (levelName.toLowerCase()) {
+    case "low":
+      return "Minor incidents with negligible impact on resident health or safety. Requires basic first aid or standard documentation.";
+    case "medium":
+    case "mild":
+      return "Moderate incidents causing temporary discomfort or minor injury. Requires nursing assessment and localized treatment.";
+    case "high":
+    case "moderate":
+      return "Significant incidents causing potential risk or requiring physician intervention. Restricts normal activity or requires diagnostic tests.";
+    case "critical":
+    case "severe":
+      return "Severe incidents causing serious injury, bone fractures, or significant clinical decline. Requires immediate physician or specialist care.";
+    case "emergency":
+      return "Life-threatening situations requiring immediate external emergency services (911) or resulting in critical escalation.";
+    default:
+      return "Description unavailable.";
+  }
+};
+
+const getDefaultExample = (levelName: string) => {
+  switch (levelName.toLowerCase()) {
+    case "low":
+      return "Minor skin tear during transfers, misplaced personal items, or mild verbal disagreement.";
+    case "medium":
+    case "mild":
+      return "Superficial fall without fractures, minor medication administration error with no side effects.";
+    case "high":
+    case "moderate":
+      return "Fall resulting in laceration requiring sutures, medication error requiring clinical monitoring, resident wandering off-site.";
+    case "critical":
+    case "severe":
+      return "Fall resulting in hip fracture, severe adverse drug reaction, or emergency room transfer.";
+    case "emergency":
+      return "Cardiac arrest, severe respiratory distress, fire outbreak requiring evacuation, or resident elopement.";
+    default:
+      return "Example unavailable.";
+  }
 };
 
 type IncidentSeverityRow = {
@@ -43,8 +78,8 @@ const IncidentSeverityPage = () => {
       data.map((item) => ({
         id: item.id,
         levelName: item.levelName,
-        description: item.description?.trim() || defaultSeverityContent.description,
-        example: item.example?.trim() || defaultSeverityContent.example,
+        description: item.description?.trim() || getDefaultDescription(item.levelName),
+        example: item.example?.trim() || getDefaultExample(item.levelName),
         chartLockTrigger: item.chartLockTrigger,
         isEditing: false,
       }))
@@ -76,8 +111,8 @@ const IncidentSeverityPage = () => {
           ? {
               ...row,
               levelName: originalRow.levelName,
-              description: originalRow.description?.trim() || defaultSeverityContent.description,
-              example: originalRow.example?.trim() || defaultSeverityContent.example,
+              description: originalRow.description?.trim() || getDefaultDescription(originalRow.levelName),
+              example: originalRow.example?.trim() || getDefaultExample(originalRow.levelName),
               isEditing: false,
             }
           : row

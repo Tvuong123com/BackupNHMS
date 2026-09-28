@@ -30,12 +30,24 @@ import com.eldercare.modules.resident_intake.care_level.history.dto.response.Loc
 
 import tools.jackson.databind.ObjectMapper;
 
-// @WebMvcTest(AssessmentController.class)
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
+import com.eldercare.modules.security.SessionStore;
+import com.eldercare.modules.admin.user_management.UserRepository;
+
+import org.springframework.test.context.ActiveProfiles;
+
+@WebMvcTest(AssessmentController.class)
+@ActiveProfiles("test")
 public class AssessmentControllerTests {
   @Autowired
   private MockMvc mockMvc;
   @MockitoBean
   private AssessmentService service;
+  @MockitoBean
+  private SessionStore sessionStore;
+  @MockitoBean
+  private UserRepository userRepository;
   @Autowired
   private ObjectMapper objectMapper;
 

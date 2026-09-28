@@ -8,7 +8,7 @@ import type {
   AssessmentUpdateRequest,
 } from "../types/assessment-type";
 
-const BASE_URL = "/assessments";
+const BASE_URL = "/api/v1/assessments";
 
 export interface AssessmentListParams {
   page: number;
@@ -63,6 +63,13 @@ export const decideAssessment = async (
 export const deleteAssessment = async (id: number) => {
   const { data } = await axiosInstance.delete<ApiResponse<null>>(
     `${BASE_URL}/${id}`,
+  );
+  return data;
+};
+
+export const getCompletedForSelect = async () => {
+  const { data } = await axiosInstance.get<ApiResponse<any[]>>(
+    `${BASE_URL}/select-completed`,
   );
   return data;
 };

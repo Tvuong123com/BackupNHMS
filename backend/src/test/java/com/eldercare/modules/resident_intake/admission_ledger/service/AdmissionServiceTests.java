@@ -29,6 +29,10 @@ import com.eldercare.modules.resident_intake.pre_admission.repository.PreAdmissi
 import com.eldercare.modules.resident_intake.resident.repository.ResidentRepository;
 import com.eldercare.modules.resident_intake.resident_profile.ResidentEntity;
 
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.repository.BedRepository;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.entity.BedEntity;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.entity.RoomEntity;
+
 @ExtendWith(MockitoExtension.class)
 public class AdmissionServiceTests {
   @Mock
@@ -37,6 +41,8 @@ public class AdmissionServiceTests {
   private PreAdmissionScreeningRepository preRepo;
   @Mock
   private ResidentRepository residentRepo;
+  @Mock
+  private BedRepository bedRepository;
   @InjectMocks
   private AdmissionServiceImpl service;
 
@@ -92,11 +98,19 @@ public class AdmissionServiceTests {
     when(admRepo.findByResidentIdAndIsCurrentTrue(1L)).thenReturn(Optional.empty());
     when(admRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(residentRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    BedEntity bed = new BedEntity();
+    RoomEntity room = new RoomEntity();
+    FacilityEntity facility = new FacilityEntity();
+    facility.setId(2L);
+    room.setFacility(facility);
+    bed.setRoom(room);
+    when(bedRepository.findById(10L)).thenReturn(Optional.of(bed));
 
     AdmissionCreateRequest req = new AdmissionCreateRequest();
     req.setPreAdmissionScreeningId(5L);
     req.setFacilityId(2L);
     req.setAdmissionDate(LocalDate.now());
+    req.setBedId(10L);
 
     AdmissionResponse res = service.create(req);
 
@@ -122,11 +136,19 @@ public class AdmissionServiceTests {
     when(admRepo.findByResidentIdAndIsCurrentTrue(1L)).thenReturn(Optional.of(oldAdm));
     when(admRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(residentRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    BedEntity bed = new BedEntity();
+    RoomEntity room = new RoomEntity();
+    FacilityEntity facility = new FacilityEntity();
+    facility.setId(2L);
+    room.setFacility(facility);
+    bed.setRoom(room);
+    when(bedRepository.findById(10L)).thenReturn(Optional.of(bed));
 
     AdmissionCreateRequest req = new AdmissionCreateRequest();
     req.setPreAdmissionScreeningId(5L);
     req.setFacilityId(2L);
     req.setAdmissionDate(LocalDate.now());
+    req.setBedId(10L);
 
     service.create(req);
 

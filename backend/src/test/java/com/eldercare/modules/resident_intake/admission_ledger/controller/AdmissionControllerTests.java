@@ -27,12 +27,24 @@ import com.eldercare.modules.resident_intake.admission_ledger.service.AdmissionS
 
 import tools.jackson.databind.ObjectMapper;
 
-// @WebMvcTest(AdmissionController.class)
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
+import com.eldercare.modules.security.SessionStore;
+import com.eldercare.modules.admin.user_management.UserRepository;
+
+import org.springframework.test.context.ActiveProfiles;
+
+@WebMvcTest(AdmissionController.class)
+@ActiveProfiles("test")
 public class AdmissionControllerTests {
   @Autowired
   private MockMvc mockMvc;
   @MockitoBean
   private AdmissionService service;
+  @MockitoBean
+  private SessionStore sessionStore;
+  @MockitoBean
+  private UserRepository userRepository;
   @Autowired
   private ObjectMapper objectMapper;
 

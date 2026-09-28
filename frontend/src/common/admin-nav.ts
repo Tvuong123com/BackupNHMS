@@ -39,7 +39,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     items: [
       {
         label: "Dashboard",
-        path: "/admin",
+        path: "/admin/dashboard",
         icon: LayoutDashboard,
         permission: PERMISSIONS.RESIDENT_VIEW,
       },

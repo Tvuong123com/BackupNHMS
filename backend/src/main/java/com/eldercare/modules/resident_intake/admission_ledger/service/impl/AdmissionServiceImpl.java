@@ -23,7 +23,7 @@ import com.eldercare.modules.resident_intake.pre_admission.repository.PreAdmissi
 import com.eldercare.modules.resident_intake.resident.repository.ResidentRepository;
 import com.eldercare.modules.resident_intake.resident_profile.ResidentEntity;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -89,6 +89,7 @@ public class AdmissionServiceImpl implements AdmissionService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<AdmissionResponse> listPaged(Pageable pageable) {
     return admRepo.findAll(pageable).map(this::toResponse);
   }
@@ -116,12 +117,12 @@ public class AdmissionServiceImpl implements AdmissionService {
     r.setStatus("DISCHARGED");
 
     residentRepo.save(r);
-    bedRepository.save(bed);
 
     return toResponse(adm);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<AdmissionSelectDTO> listActiveForSelect() {
     return admRepo.findByIsCurrentTrueAndDischargeDateIsNull().stream().map(a -> {
       AdmissionSelectDTO dto = new AdmissionSelectDTO();
@@ -135,10 +136,20 @@ public class AdmissionServiceImpl implements AdmissionService {
     AdmissionResponse dto = new AdmissionResponse();
     dto.setId(a.getId());
     dto.setAdmissionDate(a.getAdmissionDate());
-    dto.setResidentId(a.getResident().getId());
-    dto.setResidentName(a.getResident().getFirstName() + " " + a.getResident().getLastName());
-    dto.setFacilityId(a.getFacility().getId());
-    dto.setPreAdmissionScreeningId(a.getPreAdmissionScreening().getId());
+    if (a.getResident() != null) {
+      dto.setResidentId(a.getResident().getId());
+      dto.setResidentName(a.getResident().getFirstName() + " " + a.getResident().getLastName());
+      if (a.getResident().getBed() != null && a.getResident().getBed().getRoom() != null) {
+        dto.setRoomNumber(a.getResident().getBed().getRoom().getRoomNumber());
+        dto.setBedNumber(a.getResident().getBed().getBedNumber());
+      }
+    }
+    if (a.getFacility() != null) {
+      dto.setFacilityId(a.getFacility().getId());
+    }
+    if (a.getPreAdmissionScreening() != null) {
+      dto.setPreAdmissionScreeningId(a.getPreAdmissionScreening().getId());
+    }
     dto.setDischargeDate(a.getDischargeDate());
     dto.setDischargeReason(a.getDischargeReason());
     dto.setStatus(a.getDischargeDate() == null ? "ACTIVE" : "DISCHARGED");

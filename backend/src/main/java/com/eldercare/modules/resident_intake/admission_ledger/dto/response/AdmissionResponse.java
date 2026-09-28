@@ -16,5 +16,7 @@ public class AdmissionResponse {
   private Long preAdmissionScreeningId;
   private LocalDate dischargeDate;
   private String dischargeReason;
+  private String roomNumber;
+  private String bedNumber;
   private String status;
 }

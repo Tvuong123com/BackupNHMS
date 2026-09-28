@@ -33,7 +33,7 @@ public class ResidentCareLevelHistoryEntity {
     @JoinColumn(name = "care_level_id", nullable = false)
     private CareLevelEntity careLevel;
 
-    @Column(name = "action", nullable = false)
+    @Column(name = "action")
     private String action;
 }
 

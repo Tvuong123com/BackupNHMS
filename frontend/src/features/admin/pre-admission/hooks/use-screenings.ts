@@ -8,4 +8,6 @@ export const useScreenings = (params: ScreeningListParams) =>
   useQuery({
     queryKey: ["pre-admissions", "list", params],
     queryFn: () => getScreenings(params),
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
   });
