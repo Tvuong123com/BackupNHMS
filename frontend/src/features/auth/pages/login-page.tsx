@@ -35,7 +35,13 @@ export const LoginPage = () => {
       localStorage.setItem("eldcare_token", response.token);
       navigate("/admin"); // Redirect to dashboard
     } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid credentials. Please try again.");
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (!err.response && err.request) {
+        setError("Unable to connect to the backend server. Please make sure the backend is running on port 8080.");
+      } else {
+        setError("Invalid credentials. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
