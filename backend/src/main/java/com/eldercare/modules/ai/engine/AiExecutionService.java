@@ -113,7 +113,7 @@ public class AiExecutionService {
 
     private String callGemini(AiSettingsDto settings, String systemPrompt, String userPrompt) {
         String model = (settings.getGeminiModel() != null && !settings.getGeminiModel().isBlank())
-                ? settings.getGeminiModel() : "gemini-2.0-flash";
+                ? settings.getGeminiModel() : "gemini-3.8-flash";
         String apiKey = settings.getGeminiApiKey();
 
         String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;

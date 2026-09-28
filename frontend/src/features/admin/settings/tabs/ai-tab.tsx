@@ -54,7 +54,7 @@ export const AiTab = () => {
   const [settings, setSettings] = useState<AiSettings>({
     provider: "GOOGLE_GEMINI",
     geminiApiKey: "",
-    geminiModel: "gemini-2.0-flash",
+    geminiModel: "gemini-3.8-flash",
     ollamaBaseUrl: "http://localhost:11434",
     ollamaModel: "qwen3.5:2b-q4_K_M",
     temperature: 0.2,
@@ -384,21 +384,30 @@ export const AiTab = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-700">Gemini Model</Label>
-                <Select
-                  value={settings.geminiModel || "gemini-2.0-flash"}
-                  onValueChange={(val) => setSettings((prev) => ({ ...prev, geminiModel: val }))}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gemini-2.0-flash">gemini-2.0-flash (Ultra-Fast 1s - Recommended)</SelectItem>
-                    <SelectItem value="gemini-1.5-flash">gemini-1.5-flash (Standard Fast)</SelectItem>
-                    <SelectItem value="gemini-1.5-pro">gemini-1.5-pro (Complex Clinical Reasoning)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] text-slate-500">Gemini 2.0 Flash is tuned for sub-second clinical queries.</p>
+                <Label className="text-xs font-semibold text-slate-700">Gemini Model Identifier</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={settings.geminiModel || "gemini-3.8-flash"}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, geminiModel: e.target.value }))}
+                    placeholder="e.g. gemini-3.8-flash"
+                    className="font-mono text-sm flex-1"
+                  />
+                  <Select
+                    value={settings.geminiModel || "gemini-3.8-flash"}
+                    onValueChange={(val) => setSettings((prev) => ({ ...prev, geminiModel: val }))}
+                  >
+                    <SelectTrigger className="w-[170px]">
+                      <SelectValue placeholder="Presets" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini-3.8-flash">gemini-3.8-flash (Recommended)</SelectItem>
+                      <SelectItem value="gemini-2.5-flash">gemini-2.5-flash</SelectItem>
+                      <SelectItem value="gemini-1.5-flash">gemini-1.5-flash</SelectItem>
+                      <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-[11px] text-slate-500">Google AI Studio recommended model: <code className="font-mono text-blue-600 bg-blue-50 px-1 py-0.5 rounded">gemini-3.8-flash</code>.</p>
               </div>
 
               <div className="space-y-2">

@@ -76,7 +76,7 @@ public class AiSettingsService {
         currentSettings = AiSettingsDto.builder()
                 .provider(initialProvider)
                 .geminiApiKey(envKey != null ? envKey : "")
-                .geminiModel("gemini-2.0-flash")
+                .geminiModel("gemini-3.8-flash")
                 .ollamaBaseUrl(defaultOllamaBaseUrl)
                 .ollamaModel(defaultOllamaModel)
                 .temperature(0.2)
@@ -167,7 +167,7 @@ public class AiSettingsService {
             }
 
             String model = (testConfig.getGeminiModel() != null && !testConfig.getGeminiModel().isBlank())
-                    ? testConfig.getGeminiModel() : "gemini-2.0-flash";
+                    ? testConfig.getGeminiModel() : "gemini-3.8-flash";
 
             try {
                 String testUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
