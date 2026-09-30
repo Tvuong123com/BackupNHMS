@@ -47,6 +47,14 @@ public class AiController {
         return ResponseEntity.ok(aiSettingsService.testConnection(testConfig));
     }
 
+    @GetMapping("/models")
+    public ResponseEntity<Map<String, Object>> getAvailableModels(@RequestParam(required = false) String apiKey) {
+        String keyToUse = (apiKey != null && !apiKey.isBlank() && !apiKey.contains("..."))
+                ? apiKey : aiSettingsService.getSettings().getGeminiApiKey();
+        List<String> models = aiSettingsService.listAvailableGeminiModels(keyToUse);
+        return ResponseEntity.ok(Map.of("models", models));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
         AiSettingsDto s = aiSettingsService.getSettings();

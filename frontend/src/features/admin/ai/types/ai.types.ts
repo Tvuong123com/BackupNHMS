@@ -115,5 +115,6 @@ export interface AiTestResult {
   provider: string;
   model: string;
   message: string;
+  availableModels?: string[];
 }
 

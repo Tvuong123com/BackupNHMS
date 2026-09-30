@@ -15,4 +15,5 @@ public class AiTestResultDto {
     private String provider;
     private String model;
     private String message;
+    private java.util.List<String> availableModels;
 }

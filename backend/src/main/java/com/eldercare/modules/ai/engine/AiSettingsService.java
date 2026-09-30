@@ -55,7 +55,7 @@ public class AiSettingsService {
                     if ("gemini-2.0-flash".equalsIgnoreCase(currentSettings.getGeminiModel())
                             || currentSettings.getGeminiModel() == null
                             || currentSettings.getGeminiModel().isBlank()) {
-                        currentSettings.setGeminiModel("gemini-3.8-flash");
+                        currentSettings.setGeminiModel("gemini-2.5-flash");
                     }
                     log.info("Loaded AI settings from {}: provider={}, model={}", SETTINGS_FILE_PATH, currentSettings.getProvider(), currentSettings.getGeminiModel());
                     return;
@@ -84,7 +84,7 @@ public class AiSettingsService {
         currentSettings = AiSettingsDto.builder()
                 .provider(initialProvider)
                 .geminiApiKey(envKey != null ? envKey : "")
-                .geminiModel("gemini-3.8-flash")
+                .geminiModel("gemini-2.5-flash")
                 .ollamaBaseUrl(defaultOllamaBaseUrl)
                 .ollamaModel(defaultOllamaModel)
                 .temperature(0.2)
@@ -131,7 +131,7 @@ public class AiSettingsService {
 
         String geminiModel = newSettings.getGeminiModel();
         if (geminiModel == null || geminiModel.isBlank() || "gemini-2.0-flash".equalsIgnoreCase(geminiModel)) {
-            geminiModel = "gemini-3.8-flash";
+            geminiModel = "gemini-2.5-flash";
         }
 
         AiSettingsDto updated = AiSettingsDto.builder()
@@ -159,6 +159,63 @@ public class AiSettingsService {
         return getPublicSettings();
     }
 
+    public List<String> listAvailableGeminiModels(String apiKey) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return List.of();
+        }
+
+        List<String> endpoints = List.of(
+                "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey,
+                "https://generativelanguage.googleapis.com/v1/models?key=" + apiKey
+        );
+
+        for (String url : endpoints) {
+            try {
+                String responseBody = restClient.get()
+                        .uri(url)
+                        .retrieve()
+                        .body(String.class);
+
+                if (responseBody != null && !responseBody.isBlank()) {
+                    com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(responseBody);
+                    com.fasterxml.jackson.databind.JsonNode modelsNode = root.path("models");
+                    if (modelsNode.isArray() && modelsNode.size() > 0) {
+                        List<String> modelNames = new ArrayList<>();
+                        for (com.fasterxml.jackson.databind.JsonNode m : modelsNode) {
+                            com.fasterxml.jackson.databind.JsonNode methodsNode = m.path("supportedGenerationMethods");
+                            boolean supportsGenerate = false;
+                            if (methodsNode.isArray()) {
+                                for (com.fasterxml.jackson.databind.JsonNode method : methodsNode) {
+                                    if ("generateContent".equalsIgnoreCase(method.asText())) {
+                                        supportsGenerate = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (supportsGenerate) {
+                                String name = m.path("name").asText("");
+                                if (name.startsWith("models/")) {
+                                    name = name.substring("models/".length());
+                                }
+                                if (!name.isBlank() && !modelNames.contains(name)) {
+                                    modelNames.add(name);
+                                }
+                            }
+                        }
+                        if (!modelNames.isEmpty()) {
+                            log.info("Discovered {} available Gemini models for API key: {}", modelNames.size(), modelNames);
+                            return modelNames;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch models from {}: {}", url, e.getMessage());
+            }
+        }
+
+        return List.of();
+    }
+
     public AiTestResultDto testConnection(AiSettingsDto testConfig) {
         String provider = testConfig.getProvider() != null ? testConfig.getProvider() : currentSettings.getProvider();
         long start = System.currentTimeMillis();
@@ -180,59 +237,114 @@ public class AiSettingsService {
             }
 
             String requestedModel = (testConfig.getGeminiModel() != null && !testConfig.getGeminiModel().isBlank())
-                    ? testConfig.getGeminiModel() : "gemini-3.8-flash";
+                    ? testConfig.getGeminiModel().trim() : "gemini-2.5-flash";
+            if (requestedModel.startsWith("models/")) {
+                requestedModel = requestedModel.substring("models/".length());
+            }
 
+            // 1. Discover actual models enabled for this API key via Google's ListModels
+            List<String> discoveredModels = listAvailableGeminiModels(apiKey);
+
+            // 2. Prioritize testing the requested model, then its -latest alias, then discovered flash models
             List<String> modelsToTest = new ArrayList<>();
             modelsToTest.add(requestedModel);
-            if (!modelsToTest.contains("gemini-2.5-flash")) modelsToTest.add("gemini-2.5-flash");
-            if (!modelsToTest.contains("gemini-1.5-flash")) modelsToTest.add("gemini-1.5-flash");
+            if (!requestedModel.endsWith("-latest")) {
+                modelsToTest.add(requestedModel + "-latest");
+            }
+
+            for (String m : discoveredModels) {
+                if (m.toLowerCase().contains("flash") && !modelsToTest.contains(m)) {
+                    modelsToTest.add(m);
+                }
+            }
+            for (String m : discoveredModels) {
+                if (!modelsToTest.contains(m)) {
+                    modelsToTest.add(m);
+                }
+            }
+
+            // Standard fallback candidates in case discovery was empty
+            List<String> standardFallbacks = List.of(
+                    "gemini-2.5-flash",
+                    "gemini-1.5-flash-latest",
+                    "gemini-flash-latest",
+                    "gemini-3.8-flash",
+                    "gemini-1.5-flash-8b",
+                    "gemini-1.5-pro-latest"
+            );
+            for (String fb : standardFallbacks) {
+                if (!modelsToTest.contains(fb)) {
+                    modelsToTest.add(fb);
+                }
+            }
 
             Exception lastEx = null;
             for (String model : modelsToTest) {
-                try {
-                    String testUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
-                    Map<String, Object> payload = Map.of(
-                            "contents", java.util.List.of(
-                                    Map.of("role", "user", "parts", java.util.List.of(Map.of("text", "Respond with exact word 'ONLINE'")))
-                            )
-                    );
+                // Test across v1beta and v1 API versions
+                for (String apiVer : List.of("v1beta", "v1")) {
+                    try {
+                        String testUrl = "https://generativelanguage.googleapis.com/" + apiVer + "/models/" + model + ":generateContent?key=" + apiKey;
+                        Map<String, Object> payload = Map.of(
+                                "contents", List.of(
+                                        Map.of("role", "user", "parts", List.of(Map.of("text", "Respond with exact word 'ONLINE'")))
+                                )
+                        );
 
-                    restClient.post()
-                            .uri(testUrl)
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                            .body(payload)
-                            .retrieve()
-                            .body(Map.class);
+                        restClient.post()
+                                .uri(testUrl)
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .body(payload)
+                                .retrieve()
+                                .body(Map.class);
 
-                    long latency = System.currentTimeMillis() - start;
-                    String message = "Successfully connected to Google AI Studio (" + model + ") in " + latency + "ms";
-                    if (!model.equals(requestedModel)) {
-                        message = "Model '" + requestedModel + "' is temporarily busy on Google servers (503 High Demand). Successfully connected using alternate model '" + model + "' in " + latency + "ms!";
+                        long latency = System.currentTimeMillis() - start;
+                        String message;
+                        if (model.equalsIgnoreCase(requestedModel)) {
+                            message = "Successfully connected to Google AI Studio (" + model + " [" + apiVer + "]) in " + latency + "ms";
+                        } else {
+                            message = "Model '" + requestedModel + "' was unavailable. Smoothly connected using active model '" + model + "' in " + latency + "ms!";
+                        }
+
+                        // Auto-update memory settings to the working model
+                        currentSettings.setGeminiModel(model);
+
+                        return AiTestResultDto.builder()
+                                .success(true)
+                                .latencyMs(latency)
+                                .provider("GOOGLE_GEMINI")
+                                .model(model)
+                                .message(message)
+                                .availableModels(discoveredModels)
+                                .build();
+                    } catch (Exception e) {
+                        lastEx = e;
+                        log.warn("Gemini test for model {} on {} failed: {}. Continuing search...", model, apiVer, e.getMessage());
+                        if (e.getMessage() != null && (e.getMessage().contains("503") || e.getMessage().contains("429"))) {
+                            break; // Skip to next model if server is overloaded
+                        }
                     }
-                    return AiTestResultDto.builder()
-                            .success(true)
-                            .latencyMs(latency)
-                            .provider("GOOGLE_GEMINI")
-                            .model(model)
-                            .message(message)
-                            .build();
-                } catch (Exception e) {
-                    lastEx = e;
-                    log.warn("Test connection for Gemini model {} failed: {}. Trying fallback...", model, e.getMessage());
                 }
             }
 
             long latency = System.currentTimeMillis() - start;
             String errMsg = lastEx != null ? lastEx.getMessage() : "Unknown error";
             if (errMsg.contains("503") || errMsg.contains("high demand")) {
-                errMsg = "Google Gemini models are temporarily experiencing high demand (503). Try selecting 'gemini-2.5-flash' or 'gemini-1.5-flash' from Presets, or retry in a few moments.";
+                errMsg = "Google Gemini models are temporarily experiencing high demand (503). Please retry in a moment.";
+            } else if (errMsg.contains("404")) {
+                if (!discoveredModels.isEmpty()) {
+                    errMsg = "Model '" + requestedModel + "' is not supported by your API key. Available models: " + String.join(", ", discoveredModels);
+                } else {
+                    errMsg = "Google AI Studio: Model '" + requestedModel + "' not found. Try 'gemini-2.5-flash' or 'gemini-1.5-flash-latest'.";
+                }
             }
+
             return AiTestResultDto.builder()
                     .success(false)
                     .latencyMs(latency)
                     .provider("GOOGLE_GEMINI")
                     .model(requestedModel)
                     .message("Google AI Studio: " + errMsg)
+                    .availableModels(discoveredModels)
                     .build();
         } else {
             // Local Ollama

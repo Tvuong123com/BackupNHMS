@@ -79,5 +79,12 @@ export const aiService = {
     );
     return response.data;
   },
+
+  getAvailableModels: async (apiKey?: string): Promise<{ models: string[] }> => {
+    const response = await apiClient.get<{ models: string[] }>("/ai/models", {
+      params: apiKey ? { apiKey } : undefined,
+    });
+    return response.data;
+  },
 };
 

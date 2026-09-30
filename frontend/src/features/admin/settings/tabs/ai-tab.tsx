@@ -20,7 +20,9 @@ import {
   FileText,
   Mic,
   Pill,
-  Radio
+  Radio,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,13 +50,15 @@ export const AiTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [fetchingModels, setFetchingModels] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [testResult, setTestResult] = useState<AiTestResult | null>(null);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   const [settings, setSettings] = useState<AiSettings>({
     provider: "GOOGLE_GEMINI",
     geminiApiKey: "",
-    geminiModel: "gemini-3.8-flash",
+    geminiModel: "gemini-2.5-flash",
     ollamaBaseUrl: "http://localhost:11434",
     ollamaModel: "qwen3.5:2b-q4_K_M",
     temperature: 0.2,
@@ -87,7 +91,7 @@ export const AiTab = () => {
         ...prev,
         ...data,
         geminiApiKey: effectiveKey,
-        geminiModel: data.geminiModel && data.geminiModel !== "gemini-2.0-flash" ? data.geminiModel : "gemini-3.8-flash",
+        geminiModel: data.geminiModel && data.geminiModel !== "gemini-2.0-flash" ? data.geminiModel : "gemini-2.5-flash",
         features: {
           ...prev.features,
           ...(data.features || {}),
@@ -101,6 +105,37 @@ export const AiTab = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFetchModels = async () => {
+    try {
+      setFetchingModels(true);
+      const effectiveKey = settings.geminiApiKey || localStorage.getItem("eldercare_gemini_api_key") || "";
+      if (!effectiveKey) {
+        toast.error("Please enter your Google AI Studio API Key first.");
+        return;
+      }
+      const res = await aiService.getAvailableModels(effectiveKey);
+      if (res.models && res.models.length > 0) {
+        setAvailableModels(res.models);
+        const firstFlash = res.models.find(m => m.toLowerCase().includes("flash")) || res.models[0];
+        if (!res.models.includes(settings.geminiModel || "") && firstFlash) {
+          setSettings(prev => ({ ...prev, geminiModel: firstFlash }));
+        }
+        toast.success(`Discovered ${res.models.length} Gemini models!`, {
+          description: `Supported models for your API key loaded.`,
+          icon: <CheckCircle2 className="h-5 w-5 text-emerald-600" />,
+        });
+      } else {
+        toast.info("No specific models found. Please verify your API key.");
+      }
+    } catch (err: any) {
+      toast.error("Failed to query Google AI Studio models", {
+        description: err?.response?.data?.message || err.message,
+      });
+    } finally {
+      setFetchingModels(false);
     }
   };
 
@@ -140,7 +175,13 @@ export const AiTab = () => {
       setTestResult(null);
       const res = await aiService.testConnection(settings);
       setTestResult(res);
+      if (res.availableModels && res.availableModels.length > 0) {
+        setAvailableModels(res.availableModels);
+      }
       if (res.success) {
+        if (res.model && res.model !== settings.geminiModel) {
+          setSettings(prev => ({ ...prev, geminiModel: res.model }));
+        }
         toast.success(`Connected to ${res.provider}!`, {
           description: `Response received in ${res.latencyMs}ms using model ${res.model}`,
           icon: <CheckCircle2 className="h-5 w-5 text-emerald-600" />,
@@ -249,36 +290,61 @@ export const AiTab = () => {
       {/* Real-time Connection Status Indicator */}
       {testResult && (
         <div
-          className={`p-4 rounded-xl border flex items-center justify-between ${
+          className={`p-4 rounded-xl border flex flex-col gap-3 ${
             testResult.success
               ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
               : "bg-red-50/80 border-red-200 text-red-900"
           }`}
         >
-          <div className="flex items-center gap-3">
-            {testResult.success ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-            )}
-            <div>
-              <p className="text-sm font-semibold">
-                {testResult.success ? "Connection Verified" : "Connection Test Failed"}
-              </p>
-              <p className="text-xs opacity-85 mt-0.5">{testResult.message}</p>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              {testResult.success ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+              )}
+              <div>
+                <p className="text-sm font-semibold">
+                  {testResult.success ? "Connection Verified" : "Connection Test Failed"}
+                </p>
+                <p className="text-xs opacity-85 mt-0.5">{testResult.message}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono text-xs">
+                {testResult.provider} : {testResult.model}
+              </Badge>
+              {testResult.success && (
+                <Badge className="bg-emerald-600 text-white font-mono text-xs">
+                  {testResult.latencyMs} ms
+                </Badge>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-xs">
-              {testResult.provider} : {testResult.model}
-            </Badge>
-            {testResult.success && (
-              <Badge className="bg-emerald-600 text-white font-mono text-xs">
-                {testResult.latencyMs} ms
-              </Badge>
-            )}
-          </div>
+          {testResult.availableModels && testResult.availableModels.length > 0 && (
+            <div className="pt-2.5 border-t border-slate-200/60 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="font-semibold text-[11px] flex items-center gap-1 text-slate-700">
+                <Sparkles className="h-3 w-3 text-amber-500" />
+                Detected models for your key ({testResult.availableModels.length}):
+              </span>
+              {testResult.availableModels.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setSettings((prev) => ({ ...prev, geminiModel: m }))}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono cursor-pointer transition-colors border ${
+                    settings.geminiModel === m
+                      ? "bg-blue-600 text-white border-blue-600 font-semibold"
+                      : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -409,37 +475,78 @@ export const AiTab = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-700">Gemini Model Identifier</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-700">Gemini Model Identifier</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFetchModels}
+                    disabled={fetchingModels}
+                    className="h-6 text-[11px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 cursor-pointer"
+                  >
+                    {fetchingModels ? (
+                      <>
+                        <Activity className="h-3 w-3 animate-spin mr-1" />
+                        Scanning...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Scan Key Models
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <div className="flex gap-2">
                   <Input
-                    value={settings.geminiModel || "gemini-3.8-flash"}
+                    value={settings.geminiModel || "gemini-2.5-flash"}
                     onChange={(e) => setSettings((prev) => ({ ...prev, geminiModel: e.target.value }))}
-                    placeholder="e.g. gemini-3.8-flash"
+                    placeholder="e.g. gemini-2.5-flash"
                     className="font-mono text-sm flex-1"
                   />
                   <Select
-                    value={settings.geminiModel || "gemini-3.8-flash"}
+                    value={settings.geminiModel || "gemini-2.5-flash"}
                     onValueChange={(val) => setSettings((prev) => ({ ...prev, geminiModel: val }))}
                   >
-                    <SelectTrigger className="w-[170px]">
-                      <SelectValue placeholder="Presets" />
+                    <SelectTrigger className="w-[185px]">
+                      <SelectValue placeholder="Model Presets" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gemini-3.8-flash">gemini-3.8-flash (Recommended)</SelectItem>
-                      <SelectItem value="gemini-2.5-flash">gemini-2.5-flash</SelectItem>
-                      <SelectItem value="gemini-1.5-flash">gemini-1.5-flash</SelectItem>
-                      <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
+                      {availableModels.length > 0 ? (
+                        availableModels.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {m}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</SelectItem>
+                          <SelectItem value="gemini-1.5-flash-latest">gemini-1.5-flash-latest</SelectItem>
+                          <SelectItem value="gemini-flash-latest">gemini-flash-latest</SelectItem>
+                          <SelectItem value="gemini-1.5-flash-8b">gemini-1.5-flash-8b</SelectItem>
+                          <SelectItem value="gemini-3.8-flash">gemini-3.8-flash</SelectItem>
+                          <SelectItem value="gemini-1.5-pro-latest">gemini-1.5-pro-latest</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[11px] text-slate-400">Quick Switch:</span>
-                  {[
-                    { id: "gemini-3.8-flash", label: "gemini-3.8-flash" },
-                    { id: "gemini-2.5-flash", label: "gemini-2.5-flash" },
-                    { id: "gemini-1.5-flash", label: "gemini-1.5-flash (Most Stable)" },
-                    { id: "gemini-1.5-pro", label: "gemini-1.5-pro" },
-                  ].map((m) => (
+                  <span className="text-[11px] text-slate-400">
+                    {availableModels.length > 0 ? "Discovered for your key:" : "Quick Switch:"}
+                  </span>
+                  {(availableModels.length > 0
+                    ? availableModels.slice(0, 6).map((m) => ({ id: m, label: m }))
+                    : [
+                        { id: "gemini-2.5-flash", label: "gemini-2.5-flash (Recommended)" },
+                        { id: "gemini-1.5-flash-latest", label: "gemini-1.5-flash-latest" },
+                        { id: "gemini-flash-latest", label: "gemini-flash-latest" },
+                        { id: "gemini-1.5-flash-8b", label: "gemini-1.5-flash-8b" },
+                        { id: "gemini-3.8-flash", label: "gemini-3.8-flash" },
+                        { id: "gemini-1.5-pro-latest", label: "gemini-1.5-pro-latest" },
+                      ]
+                  ).map((m) => (
                     <button
                       key={m.id}
                       type="button"
@@ -454,7 +561,7 @@ export const AiTab = () => {
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-500">If a model encounters high demand (503), the backend automatically falls back to an alternate flash model, or you can switch directly above.</p>
+                <p className="text-[11px] text-slate-500">Dual v1/v1beta support with automatic fallback to active models if high demand (503) or deprecation (404) occurs.</p>
               </div>
 
               <div className="space-y-2">

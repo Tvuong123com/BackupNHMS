@@ -143,51 +143,81 @@ public class AiExecutionService {
 
     private String callGemini(AiSettingsDto settings, String systemPrompt, String userPrompt) {
         String primaryModel = (settings.getGeminiModel() != null && !settings.getGeminiModel().isBlank())
-                ? settings.getGeminiModel() : "gemini-3.8-flash";
+                ? settings.getGeminiModel().trim() : "gemini-2.5-flash";
+        if (primaryModel.startsWith("models/")) {
+            primaryModel = primaryModel.substring("models/".length());
+        }
         String apiKey = settings.getGeminiApiKey();
 
+        List<String> available = settingsService.listAvailableGeminiModels(apiKey);
         List<String> modelsToTry = new ArrayList<>();
         modelsToTry.add(primaryModel);
-        if (!modelsToTry.contains("gemini-2.5-flash")) modelsToTry.add("gemini-2.5-flash");
-        if (!modelsToTry.contains("gemini-1.5-flash")) modelsToTry.add("gemini-1.5-flash");
-        if (!modelsToTry.contains("gemini-1.5-pro")) modelsToTry.add("gemini-1.5-pro");
+        if (!primaryModel.endsWith("-latest")) {
+            modelsToTry.add(primaryModel + "-latest");
+        }
+
+        // Add discovered flash models
+        for (String m : available) {
+            if (m.toLowerCase().contains("flash") && !modelsToTry.contains(m)) {
+                modelsToTry.add(m);
+            }
+        }
+        // Add other discovered models
+        for (String m : available) {
+            if (!modelsToTry.contains(m)) {
+                modelsToTry.add(m);
+            }
+        }
+
+        // Hardcoded fallbacks if list is empty
+        List<String> fallbacks = List.of("gemini-2.5-flash", "gemini-1.5-flash-latest", "gemini-flash-latest", "gemini-3.8-flash", "gemini-1.5-flash-8b");
+        for (String fb : fallbacks) {
+            if (!modelsToTry.contains(fb)) {
+                modelsToTry.add(fb);
+            }
+        }
 
         Exception lastException = null;
         for (String model : modelsToTry) {
-            try {
-                String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+            for (String apiVer : List.of("v1beta", "v1")) {
+                try {
+                    String url = "https://generativelanguage.googleapis.com/" + apiVer + "/models/" + model + ":generateContent?key=" + apiKey;
 
-                Map<String, Object> requestBody = new HashMap<>();
+                    Map<String, Object> requestBody = new HashMap<>();
 
-                if (systemPrompt != null && !systemPrompt.isBlank()) {
-                    requestBody.put("system_instruction", Map.of(
-                            "parts", List.of(Map.of("text", systemPrompt))
+                    if (systemPrompt != null && !systemPrompt.isBlank()) {
+                        requestBody.put("system_instruction", Map.of(
+                                "parts", List.of(Map.of("text", systemPrompt))
+                        ));
+                    }
+
+                    requestBody.put("contents", List.of(
+                            Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))
                     ));
+
+                    Map<String, Object> genConfig = new HashMap<>();
+                    genConfig.put("temperature", settings.getTemperature() != null ? settings.getTemperature() : 0.2);
+                    genConfig.put("maxOutputTokens", settings.getMaxTokens() != null ? settings.getMaxTokens() : 1024);
+                    requestBody.put("generationConfig", genConfig);
+
+                    String jsonResponse = restClient.post()
+                            .uri(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(requestBody)
+                            .retrieve()
+                            .body(String.class);
+
+                    if (!model.equalsIgnoreCase(primaryModel)) {
+                        log.warn("Primary model {} was unavailable, smoothly fulfilled request using fallback model {} [{}]", primaryModel, model, apiVer);
+                    }
+                    return parseGeminiResponse(jsonResponse);
+                } catch (Exception e) {
+                    lastException = e;
+                    log.warn("Gemini model {} on {} failed ({}). Attempting next candidate...", model, apiVer, e.getMessage());
+                    if (e.getMessage() != null && (e.getMessage().contains("503") || e.getMessage().contains("429"))) {
+                        break; // Skip to next model
+                    }
                 }
-
-                requestBody.put("contents", List.of(
-                        Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))
-                ));
-
-                Map<String, Object> genConfig = new HashMap<>();
-                genConfig.put("temperature", settings.getTemperature() != null ? settings.getTemperature() : 0.2);
-                genConfig.put("maxOutputTokens", settings.getMaxTokens() != null ? settings.getMaxTokens() : 1024);
-                requestBody.put("generationConfig", genConfig);
-
-                String jsonResponse = restClient.post()
-                        .uri(url)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(requestBody)
-                        .retrieve()
-                        .body(String.class);
-
-                if (!model.equals(primaryModel)) {
-                    log.warn("Primary model {} was unavailable (503/429/404), successfully fulfilled request using fallback model {}", primaryModel, model);
-                }
-                return parseGeminiResponse(jsonResponse);
-            } catch (Exception e) {
-                lastException = e;
-                log.warn("Gemini model {} failed ({}). Attempting next fallback model...", model, e.getMessage());
             }
         }
 
