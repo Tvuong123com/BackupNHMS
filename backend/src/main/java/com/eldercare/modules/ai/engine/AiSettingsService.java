@@ -12,7 +12,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -177,42 +179,61 @@ public class AiSettingsService {
                         .build();
             }
 
-            String model = (testConfig.getGeminiModel() != null && !testConfig.getGeminiModel().isBlank())
+            String requestedModel = (testConfig.getGeminiModel() != null && !testConfig.getGeminiModel().isBlank())
                     ? testConfig.getGeminiModel() : "gemini-3.8-flash";
 
-            try {
-                String testUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
-                Map<String, Object> payload = Map.of(
-                        "contents", java.util.List.of(
-                                Map.of("role", "user", "parts", java.util.List.of(Map.of("text", "Respond with exact word 'ONLINE'")))
-                        )
-                );
+            List<String> modelsToTest = new ArrayList<>();
+            modelsToTest.add(requestedModel);
+            if (!modelsToTest.contains("gemini-2.5-flash")) modelsToTest.add("gemini-2.5-flash");
+            if (!modelsToTest.contains("gemini-1.5-flash")) modelsToTest.add("gemini-1.5-flash");
 
-                Map response = restClient.post()
-                        .uri(testUrl)
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .body(payload)
-                        .retrieve()
-                        .body(Map.class);
+            Exception lastEx = null;
+            for (String model : modelsToTest) {
+                try {
+                    String testUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+                    Map<String, Object> payload = Map.of(
+                            "contents", java.util.List.of(
+                                    Map.of("role", "user", "parts", java.util.List.of(Map.of("text", "Respond with exact word 'ONLINE'")))
+                            )
+                    );
 
-                long latency = System.currentTimeMillis() - start;
-                return AiTestResultDto.builder()
-                        .success(true)
-                        .latencyMs(latency)
-                        .provider("GOOGLE_GEMINI")
-                        .model(model)
-                        .message("Successfully connected to Google AI Studio (" + model + ") in " + latency + "ms")
-                        .build();
-            } catch (Exception e) {
-                long latency = System.currentTimeMillis() - start;
-                return AiTestResultDto.builder()
-                        .success(false)
-                        .latencyMs(latency)
-                        .provider("GOOGLE_GEMINI")
-                        .model(model)
-                        .message("Google AI Studio connection failed: " + e.getMessage())
-                        .build();
+                    restClient.post()
+                            .uri(testUrl)
+                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                            .body(payload)
+                            .retrieve()
+                            .body(Map.class);
+
+                    long latency = System.currentTimeMillis() - start;
+                    String message = "Successfully connected to Google AI Studio (" + model + ") in " + latency + "ms";
+                    if (!model.equals(requestedModel)) {
+                        message = "Model '" + requestedModel + "' is temporarily busy on Google servers (503 High Demand). Successfully connected using alternate model '" + model + "' in " + latency + "ms!";
+                    }
+                    return AiTestResultDto.builder()
+                            .success(true)
+                            .latencyMs(latency)
+                            .provider("GOOGLE_GEMINI")
+                            .model(model)
+                            .message(message)
+                            .build();
+                } catch (Exception e) {
+                    lastEx = e;
+                    log.warn("Test connection for Gemini model {} failed: {}. Trying fallback...", model, e.getMessage());
+                }
             }
+
+            long latency = System.currentTimeMillis() - start;
+            String errMsg = lastEx != null ? lastEx.getMessage() : "Unknown error";
+            if (errMsg.contains("503") || errMsg.contains("high demand")) {
+                errMsg = "Google Gemini models are temporarily experiencing high demand (503). Try selecting 'gemini-2.5-flash' or 'gemini-1.5-flash' from Presets, or retry in a few moments.";
+            }
+            return AiTestResultDto.builder()
+                    .success(false)
+                    .latencyMs(latency)
+                    .provider("GOOGLE_GEMINI")
+                    .model(requestedModel)
+                    .message("Google AI Studio: " + errMsg)
+                    .build();
         } else {
             // Local Ollama
             String url = (testConfig.getOllamaBaseUrl() != null && !testConfig.getOllamaBaseUrl().isBlank())

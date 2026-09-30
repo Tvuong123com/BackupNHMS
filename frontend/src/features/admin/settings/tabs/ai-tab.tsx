@@ -432,7 +432,29 @@ export const AiTab = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-[11px] text-slate-500">Google AI Studio recommended model: <code className="font-mono text-blue-600 bg-blue-50 px-1 py-0.5 rounded">gemini-3.8-flash</code>.</p>
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] text-slate-400">Quick Switch:</span>
+                  {[
+                    { id: "gemini-3.8-flash", label: "gemini-3.8-flash" },
+                    { id: "gemini-2.5-flash", label: "gemini-2.5-flash" },
+                    { id: "gemini-1.5-flash", label: "gemini-1.5-flash (Most Stable)" },
+                    { id: "gemini-1.5-pro", label: "gemini-1.5-pro" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setSettings((prev) => ({ ...prev, geminiModel: m.id }))}
+                      className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                        settings.geminiModel === m.id
+                          ? "bg-blue-600 text-white border-blue-600 font-medium shadow-xs"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500">If a model encounters high demand (503), the backend automatically falls back to an alternate flash model, or you can switch directly above.</p>
               </div>
 
               <div className="space-y-2">

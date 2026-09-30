@@ -142,37 +142,56 @@ public class AiExecutionService {
     }
 
     private String callGemini(AiSettingsDto settings, String systemPrompt, String userPrompt) {
-        String model = (settings.getGeminiModel() != null && !settings.getGeminiModel().isBlank())
+        String primaryModel = (settings.getGeminiModel() != null && !settings.getGeminiModel().isBlank())
                 ? settings.getGeminiModel() : "gemini-3.8-flash";
         String apiKey = settings.getGeminiApiKey();
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+        List<String> modelsToTry = new ArrayList<>();
+        modelsToTry.add(primaryModel);
+        if (!modelsToTry.contains("gemini-2.5-flash")) modelsToTry.add("gemini-2.5-flash");
+        if (!modelsToTry.contains("gemini-1.5-flash")) modelsToTry.add("gemini-1.5-flash");
+        if (!modelsToTry.contains("gemini-1.5-pro")) modelsToTry.add("gemini-1.5-pro");
 
-        Map<String, Object> requestBody = new HashMap<>();
+        Exception lastException = null;
+        for (String model : modelsToTry) {
+            try {
+                String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
-        if (systemPrompt != null && !systemPrompt.isBlank()) {
-            requestBody.put("system_instruction", Map.of(
-                    "parts", List.of(Map.of("text", systemPrompt))
-            ));
+                Map<String, Object> requestBody = new HashMap<>();
+
+                if (systemPrompt != null && !systemPrompt.isBlank()) {
+                    requestBody.put("system_instruction", Map.of(
+                            "parts", List.of(Map.of("text", systemPrompt))
+                    ));
+                }
+
+                requestBody.put("contents", List.of(
+                        Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))
+                ));
+
+                Map<String, Object> genConfig = new HashMap<>();
+                genConfig.put("temperature", settings.getTemperature() != null ? settings.getTemperature() : 0.2);
+                genConfig.put("maxOutputTokens", settings.getMaxTokens() != null ? settings.getMaxTokens() : 1024);
+                requestBody.put("generationConfig", genConfig);
+
+                String jsonResponse = restClient.post()
+                        .uri(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(requestBody)
+                        .retrieve()
+                        .body(String.class);
+
+                if (!model.equals(primaryModel)) {
+                    log.warn("Primary model {} was unavailable (503/429/404), successfully fulfilled request using fallback model {}", primaryModel, model);
+                }
+                return parseGeminiResponse(jsonResponse);
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("Gemini model {} failed ({}). Attempting next fallback model...", model, e.getMessage());
+            }
         }
 
-        requestBody.put("contents", List.of(
-                Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))
-        ));
-
-        Map<String, Object> genConfig = new HashMap<>();
-        genConfig.put("temperature", settings.getTemperature() != null ? settings.getTemperature() : 0.2);
-        genConfig.put("maxOutputTokens", settings.getMaxTokens() != null ? settings.getMaxTokens() : 1024);
-        requestBody.put("generationConfig", genConfig);
-
-        String jsonResponse = restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestBody)
-                .retrieve()
-                .body(String.class);
-
-        return parseGeminiResponse(jsonResponse);
+        throw new RuntimeException("All Google Gemini models failed. Last error: " + (lastException != null ? lastException.getMessage() : "unknown"));
     }
 
     private String parseGeminiResponse(String jsonResponse) {
