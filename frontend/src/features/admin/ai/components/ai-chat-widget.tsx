@@ -18,19 +18,21 @@ interface Message {
   sender: "user" | "ai";
   text: string;
   timestamp: Date;
+  sources?: string[];
 }
 
 export const AiChatWidget: React.FC = () => {
+  const [conversationId, setConversationId] = useState(() => sessionStorage.getItem("eldercare-admin-ai-conversation") || "");
   const [isOpen, setIsOpen] = useState(false);
   const [aiEngine, setAiEngine] = useState<{ provider: string; model: string }>({
-    provider: "GOOGLE_GEMINI",
-    model: "gemini-3.8-flash",
+    provider: "LOCAL_OLLAMA",
+    model: "eldercare-ai",
   });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       sender: "ai",
-      text: "Hello! I am your ElderCare Clinical Assistant. I can help with care protocols, incident severity classification, personalized care plans, and shift summaries.",
+      text: "Hello. I can help find recorded context and draft staff documentation. Confirm clinical decisions against the chart and approved procedures.",
       timestamp: new Date(),
     },
   ]);
@@ -40,13 +42,11 @@ export const AiChatWidget: React.FC = () => {
 
   const fetchActiveEngine = async () => {
     try {
-      const s = await aiService.getSettings();
+      const s = await aiService.checkHealth();
       if (s) {
         setAiEngine({
-          provider: s.provider || "GOOGLE_GEMINI",
-          model: s.provider === "GOOGLE_GEMINI" 
-            ? (s.geminiModel || "gemini-3.8-flash") 
-            : (s.ollamaModel || "qwen3.5:2b-q4_K_M"),
+          provider: s.provider || "LOCAL_OLLAMA",
+          model: s.model || "eldercare-ai",
         });
       }
     } catch {
@@ -60,6 +60,16 @@ export const AiChatWidget: React.FC = () => {
 
   useEffect(() => {
     fetchActiveEngine();
+    if (conversationId) {
+      aiService.getChatHistory(conversationId).then((turns) => {
+        if (turns.length > 0) setMessages(turns.map((turn, index) => ({
+          id: `history-${index}`,
+          sender: turn.role === "user" ? "user" : "ai",
+          text: turn.content,
+          timestamp: new Date(),
+        })));
+      }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -85,7 +95,11 @@ export const AiChatWidget: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await aiService.chat({ message: text });
+      const response = await aiService.chat({ message: text, conversationId: conversationId || undefined });
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+        sessionStorage.setItem("eldercare-admin-ai-conversation", response.conversationId);
+      }
       if (response.model) {
         setAiEngine({
           model: response.model,
@@ -97,6 +111,7 @@ export const AiChatWidget: React.FC = () => {
         sender: "ai",
         text: response.reply,
         timestamp: new Date(),
+        sources: response.sources,
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch {
@@ -113,9 +128,11 @@ export const AiChatWidget: React.FC = () => {
   };
 
   const samplePrompts = [
-    "Immediate protocol for an unwitnessed resident fall?",
-    "Criteria for High vs Emergency incident severity?",
-    "Suggest care interventions for nighttime dementia wandering",
+    { label: "🚨 Unwitnessed Fall Protocol", prompt: "What is the immediate nursing protocol upon discovering an unwitnessed resident fall?" },
+    { label: "💊 Warfarin & NSAID Interaction", prompt: "What are the clinical bleeding risks and monitoring actions if a resident on Warfarin is prescribed Ibuprofen?" },
+    { label: "🧠 Sundowning Non-Pharm Care", prompt: "Propose non-pharmacological interventions for a dementia resident exhibiting sundowning agitation at 17:00?" },
+    { label: "📋 SBAR Shift Handover Draft", prompt: "Draft a clinical SBAR shift handover summary for a resident with acute fever and hypotension during shift?" },
+    { label: "🛡️ Beers Criteria & FRIDs", prompt: "Which sedative/hypnotic medications require Gradual Dose Reduction (GDR) under CMS F758 and Beers Criteria?" },
   ];
 
   return (
@@ -132,11 +149,10 @@ export const AiChatWidget: React.FC = () => {
               <div>
                 <div className="flex items-center space-x-1.5">
                   <h3 className="text-sm font-semibold tracking-wide">
-                    ElderCare Clinical Assistant
+                    ElderCare Staff AI Assistant
                   </h3>
                   <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-200"></span>
                   </span>
                 </div>
                 <p className="text-[11px] text-blue-100 flex items-center space-x-1">
@@ -158,11 +174,13 @@ export const AiChatWidget: React.FC = () => {
               <button
                 onClick={() => {
                   fetchActiveEngine();
+                  setConversationId("");
+                  sessionStorage.removeItem("eldercare-admin-ai-conversation");
                   setMessages([
                     {
                       id: "welcome",
                       sender: "ai",
-                      text: "Hello! How can I assist you on your clinical shift today?",
+                      text: "Hello. Ask about recorded context or staff documentation. Verify clinical decisions in the chart.",
                       timestamp: new Date(),
                     },
                   ]);
@@ -212,6 +230,11 @@ export const AiChatWidget: React.FC = () => {
                   }`}
                 >
                   {msg.text}
+                  {msg.sources && msg.sources.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 text-[10px] text-zinc-500">
+                      Retrieved context: {msg.sources.join(", ")}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -228,15 +251,16 @@ export const AiChatWidget: React.FC = () => {
           </div>
 
           {/* Prompt Suggestions */}
-          {messages.length <= 2 && (
-            <div className="px-3 py-2 bg-zinc-100/60 dark:bg-zinc-900/60 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap gap-1.5">
-              {samplePrompts.map((prompt, idx) => (
+          {messages.length <= 3 && (
+            <div className="px-3 py-2 bg-zinc-100/70 dark:bg-zinc-900/70 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+              {samplePrompts.map((item, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSend(prompt)}
-                  className="text-[11px] bg-white dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-zinc-700/60 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-full px-2.5 py-1 text-left transition-colors"
+                  onClick={() => handleSend(item.prompt)}
+                  title={item.prompt}
+                  className="text-[11px] bg-white dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-zinc-700/60 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 rounded-full px-2.5 py-1 text-left transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
                 >
-                  💡 {prompt}
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -267,7 +291,7 @@ export const AiChatWidget: React.FC = () => {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-xl hover:shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none"
-        aria-label="Open Clinical AI Assistant"
+        aria-label="Open Staff AI Assistant"
       >
         <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

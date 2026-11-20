@@ -1,1 +1,52 @@
+# IDE and Editors
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# Sensitive files, keys, and credentials
+*.pem
+*.key
+*.pkcs12
+*.p12
+*.jks
+.env
+.env.*
+!.env.example
+ai-settings.json
+**/ai-settings.json
+*prefs.xml
+
+# Databases and large archives
+*.bak
+*.mdf
+*.ldf
+*.tar.gz
+*.zip
+*.7z
+nhms-app.tar.gz
+nhms.bak
+frontend-update.tar.gz
+
+# Build outputs
+target/
+**/target/
+build/
+**/build/
+dist/
+**/dist/
+node_modules/
+**/node_modules/
+.gradle/
+**/android-companion/.gradle/
+**/android-companion/**/build/
+*.apk
+*.aab
+
+# Temporary and debug
+.codex-debug/
+.codex-slide-build/
+deliverables/
+.continue/
+restore_daniel_pwd.sql
+update_pwd.sql

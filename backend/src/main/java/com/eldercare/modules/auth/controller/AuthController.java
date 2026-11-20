@@ -8,7 +8,9 @@ import com.eldercare.modules.security.SessionStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -18,11 +20,27 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping({"/auth", "/api/v1/auth"})
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
     private com.eldercare.modules.auth.service.AuthService authService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public record CurrentUser(Long id, String email, String firstName, String lastName,
+                              String roleName) {}
+
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUser> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        UserEntity user = userRepository.findActiveByEmailWithRole(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        return ResponseEntity.ok(new CurrentUser(user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), user.getRole().getRoleName()));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {

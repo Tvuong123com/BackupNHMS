@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CarePlanSuggestionRequest {
+    private Long residentId;
     private String residentName;
     private Integer age;
     private String gender;

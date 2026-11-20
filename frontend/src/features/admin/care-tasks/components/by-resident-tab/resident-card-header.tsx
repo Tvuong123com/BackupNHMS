@@ -1,8 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AiVoiceCareInput } from "@/features/admin/ai/components/ai-voice-care-input";
+import type { EnrichedTaskRow } from "@/services/care-tasks-api";
 
 interface ResidentCardHeaderProps {
+  tasks: EnrichedTaskRow[];
+  onVoiceConfirmed?: () => void;
   resident: {
     id: string;
     name: string;
@@ -17,7 +20,7 @@ interface ResidentCardHeaderProps {
   };
 }
 
-export const ResidentCardHeader = ({ resident }: ResidentCardHeaderProps) => {
+export const ResidentCardHeader = ({ resident, tasks, onVoiceConfirmed }: ResidentCardHeaderProps) => {
   // Dot colours
   const dotColor =
     resident.statusDot === "alert"
@@ -72,6 +75,9 @@ export const ResidentCardHeader = ({ resident }: ResidentCardHeaderProps) => {
 
       {/* Right — AI Voice Care Input */}
       <AiVoiceCareInput
+        residentId={Number(resident.id)}
+        tasks={tasks}
+        onConfirmed={onVoiceConfirmed}
         expectedResidentName={resident.name}
         expectedRoomNumber={resident.room}
       />

@@ -4,26 +4,29 @@ import { aiService } from "../services/ai-service";
 import type { CarePlanSuggestionResponse, SuggestedGoal } from "../types/ai.types";
 
 interface AiSuggestCarePlanModalProps {
-  residentName?: string;
+  residentId: number;
+  residentName: string;
   careLevel?: string;
   adlScore?: number;
   diagnoses?: string[];
   recentIncidents?: string[];
-  onApplyGoals?: (goals: SuggestedGoal[]) => void;
+  onApplyGoals: (goals: SuggestedGoal[]) => Promise<void>;
   className?: string;
 }
 
 export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
-  residentName = "Eleanor Vance",
-  careLevel = "Skilled Nursing",
-  adlScore = 22,
-  diagnoses = ["Hypertension", "Mild gait instability"],
-  recentIncidents = ["Unwitnessed bathroom fall 2 weeks ago"],
+  residentId,
+  residentName,
+  careLevel,
+  adlScore,
+  diagnoses,
+  recentIncidents,
   onApplyGoals,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<CarePlanSuggestionResponse | null>(null);
   const [selectedGoals, setSelectedGoals] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
     setError(null);
     try {
       const data = await aiService.suggestCarePlan({
+        residentId,
         residentName,
         careLevel,
         adlScore,
@@ -46,7 +50,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
       });
       setSelectedGoals(initialSelected);
     } catch {
-      setError("Unable to connect to clinical suggestion service. Please verify local Ollama is active.");
+      setError("Unable to connect to the configured AI provider. Check AI settings or enter care goals manually.");
     } finally {
       setLoading(false);
     }
@@ -66,11 +70,21 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
     }));
   };
 
-  const handleApply = () => {
-    if (!result || !onApplyGoals) return;
+  const handleApply = async () => {
+    if (!result || saving) return;
     const goalsToApply = result.suggestedGoals.filter((_, idx) => selectedGoals[idx]);
-    onApplyGoals(goalsToApply);
-    setIsOpen(false);
+    if (goalsToApply.length === 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onApplyGoals(goalsToApply);
+      setIsOpen(false);
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.message || err?.message;
+      setError(serverMsg || "Could not save the selected goals. Review the care plan and try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -98,7 +112,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                     Clinical Decision Support: Suggested Care Goals
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    Tailored interventions based on ADL evaluation ({adlScore}/28) for {residentName}
+                    Draft suggestions for {residentName}; review before saving to the care plan.
                   </p>
                 </div>
               </div>
@@ -113,12 +127,12 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
             {/* Resident Brief Tags */}
             <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 text-xs">
               <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-medium">
-                Care Level: {careLevel}
+                Care Level: {careLevel ?? "Not recorded"}
               </span>
               <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-medium">
-                ADL Score: {adlScore}
+                ADL Score: {adlScore ?? "Not recorded"}
               </span>
-              {recentIncidents.map((inc, i) => (
+              {(recentIncidents ?? []).map((inc, i) => (
                 <span key={i} className="px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 flex items-center gap-1 font-medium">
                   <ShieldAlert className="w-3 h-3" /> {inc}
                 </span>
@@ -148,6 +162,12 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                     "{result.residentSummary}"
                   </p>
 
+                  {result.suggestedGoals.length === 0 && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      No AI goals were created. Review the resident chart and write the care plan directly.
+                    </p>
+                  )}
+
                   <div className="space-y-3">
                     {result.suggestedGoals.map((goal, idx) => (
                       <div
@@ -164,6 +184,7 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                             <input
                               type="checkbox"
                               checked={!!selectedGoals[idx]}
+                              onClick={(event) => event.stopPropagation()}
                               onChange={() => toggleGoal(idx)}
                               className="mt-1 h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
                             />
@@ -238,10 +259,11 @@ export const AiSuggestCarePlanModal: React.FC<AiSuggestCarePlanModalProps> = ({
                   <button
                     type="button"
                     onClick={handleApply}
+                    disabled={saving || !Object.values(selectedGoals).some(Boolean)}
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors"
                   >
                     <UserCheck className="w-3.5 h-3.5" />
-                    Apply Selected Goals
+                    {saving ? "Saving..." : "Save Selected Goals for Review"}
                   </button>
                 </div>
               </div>

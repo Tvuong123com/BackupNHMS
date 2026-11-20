@@ -507,7 +507,9 @@ export const AiTab = () => {
                   />
                   <Select
                     value={settings.geminiModel || "gemini-2.5-flash"}
-                    onValueChange={(val) => setSettings((prev) => ({ ...prev, geminiModel: val }))}
+                    onValueChange={(val) => {
+                      if (val) setSettings((prev) => ({ ...prev, geminiModel: val }));
+                    }}
                   >
                     <SelectTrigger className="w-[185px]">
                       <SelectValue placeholder="Model Presets" />

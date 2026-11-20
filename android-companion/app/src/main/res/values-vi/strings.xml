@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">NHMS CareCompanion</string>
+    <string name="tab_home">Trang chủ</string>
+    <string name="tab_activities">Hoạt động</string>
+    <string name="tab_tasks">Nhiệm vụ</string>
+    <string name="tab_notifications">Thông báo</string>
+    <string name="tab_account">Tài khoản</string>
+</resources>

@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MedicationCheckRequest {
+    private Long residentId;
     private String residentName;
     private List<String> currentMedications;
     private String newMedication;

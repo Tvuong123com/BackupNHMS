@@ -57,6 +57,11 @@ const incidentTypeOptions = [
   { value: "MEDICATION_ERROR", label: "Medication Error" },
   { value: "ALTERCATION", label: "Altercation" },
   { value: "SKIN_TEAR", label: "Skin Tear" },
+  { value: "ELOPEMENT", label: "Elopement" },
+  { value: "BEHAVIORAL", label: "Behavioral" },
+  { value: "MEDICAL_EMERGENCY", label: "Medical Emergency" },
+  { value: "INJURY", label: "Injury" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export type IncidentFormValues = {
@@ -255,7 +260,7 @@ export function IncidentDetailsSection({
     data?.severityId
   );
   const [dateTime, setDateTime] = React.useState(
-    data?.dateTime ?? ""
+    data?.dateTime ?? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   );
   const [location, setLocation] = React.useState(
     data?.location ?? ""

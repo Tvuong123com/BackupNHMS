@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { AiCareNavigator } from "../components/ai/ai-care-navigator";
 
 const steps = [
   {
@@ -57,11 +58,13 @@ const requirements = [
 ];
 
 const faqs = [
-  { q: "How long does the admission process take?", a: "The process typically takes 2–5 business days from initial contact to move-in, depending on the complexity of needs and document availability. Emergency admissions can often be arranged within 24–48 hours." },
-  { q: "Can we visit before committing to admission?", a: "Absolutely. We encourage families to schedule a facility tour and meet with our care team before making any decisions. Tours are free and can be arranged within 24 hours." },
-  { q: "What happens if care needs change after admission?", a: "Care plans are living documents. We review and update them at a minimum every 90 days, or immediately whenever there is a significant change in your loved one's condition." },
-  { q: "Are there short-term or trial admissions available?", a: "Yes. We offer short-term rehabilitation stays, respite care for family caregivers, and in some cases trial stays so residents can experience our community before a long-term commitment." },
+  { q: "How long does the admission process take?", a: "The published typical timeline is 2–5 business days from initial contact. Care needs, paperwork, and available placement can change the timing; Admissions will confirm a date for your case." },
+  { q: "Can we visit before committing to admission?", a: "Yes. You can request a free facility tour through the Contact page. The team will confirm an available time." },
+  { q: "What happens if care needs change after admission?", a: "The care team reviews the individual care plan when a resident's needs change. Ask the team how updates and family discussions are handled for your situation." },
+  { q: "Are there short-term or trial admissions available?", a: "The website describes short-term rehabilitation and respite care. Ask Admissions about current availability, suitability, and whether a trial stay is an option." },
   { q: "What is the difference between a Level of Care and a care plan?", a: "The Level of Care (LOC) determines the intensity of nursing services required and directly impacts billing. The care plan is the day-to-day roadmap of how your loved one will be cared for, including goals, activities, and therapies." },
+  { q: "What documents should I prepare?", a: "For an initial discussion, gather recent medical records or a discharge summary, physician orders and a medication list, insurance information, identification, any applicable legal documents, and emergency contacts. Admissions will confirm what is needed for your case." },
+  { q: "Does the online pre-screener decide eligibility or reserve a bed?", a: "No. It organizes the answers you provide and suggests a service to discuss. Admissions and the clinical team determine eligibility, care level, and placement after reviewing the case." },
 ];
 
 export default function AdmissionsPage() {
@@ -105,7 +108,7 @@ export default function AdmissionsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-5">
               {[
-                { value: "24-48h", label: "Emergency Admission", icon: "⚡" },
+                { value: "4 steps", label: "Admission Process", icon: "📋" },
                 { value: "2-5 days", label: "Standard Admission", icon: "📅" },
                 { value: "Free", label: "Initial Consultation", icon: "💬" },
                 { value: "100%", label: "Personalized Plans", icon: "❤️" },
@@ -118,6 +121,13 @@ export default function AdmissionsPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* AI Pre-Screening Interactive Section */}
+      <section className="py-12 bg-[#f8f9ff] border-b border-gray-100 relative -mt-8 z-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <AiCareNavigator sourceContext="admissions" />
         </div>
       </section>
 
@@ -299,7 +309,8 @@ export default function AdmissionsPage() {
 function AdmissionFaq({ faqs }: { faqs: { q: string; a: string }[] }) {
   const [open, setOpen] = React.useState<number | null>(null);
   return (
-    <div className="space-y-4">
+    <div>
+      <div className="space-y-4">
       {faqs.map((faq, i) => (
         <div
           key={i}
@@ -321,6 +332,7 @@ function AdmissionFaq({ faqs }: { faqs: { q: string; a: string }[] }) {
           )}
         </div>
       ))}
+      </div>
     </div>
   );
 }

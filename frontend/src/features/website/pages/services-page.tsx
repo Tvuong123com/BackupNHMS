@@ -84,7 +84,7 @@ const faqs = [
   },
   {
     q: "Do you accept Medicare and Medicaid?",
-    a: "Yes. We are Medicare and Medicaid certified. Our financial counselors are available to help you understand your coverage options and any out-of-pocket costs.",
+      a: "Medicare may cover eligible short-term skilled nursing care; Medicaid may cover nursing facility care for eligible people under state rules. Please ask Admissions to verify this facility's participation, your plan benefits, and any out-of-pocket costs.",
   },
   {
     q: "Can family members visit anytime?",
@@ -92,11 +92,11 @@ const faqs = [
   },
   {
     q: "How are care plans updated?",
-    a: "Care plans are reviewed at a minimum every 90 days or whenever there is a significant change in a resident's condition. Families are always included in these reviews.",
+    a: "The care team reviews a resident's plan when care needs change. Ask the team how review timing and family participation are handled for an individual plan.",
   },
   {
     q: "What happens in a medical emergency?",
-    a: "We have licensed nurses on-site 24/7. In a medical emergency, we coordinate immediately with local emergency services while keeping families informed in real time.",
+    a: "For an immediate emergency, call local emergency services. Ask the facility directly about its current emergency response process, staffing, and how family members are contacted.",
   },
 ];
 

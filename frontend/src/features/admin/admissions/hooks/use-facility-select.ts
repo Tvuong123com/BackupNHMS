@@ -5,5 +5,6 @@ export const useFacilityForSelect = () => {
   return useQuery({
     queryKey: ["facilities", "select"],
     queryFn: getFacilityForSelect,
+    retry: false,
   });
 };

@@ -20,7 +20,6 @@ export const careLevelApi = {
   /// Get care level rates by care level id
 getCareLevelRates: (careLevelId: number) => {
   const token = localStorage.getItem("token");
-  console.log("TOKEN:", token);
 
   return axios.get<CareLevelRateResponse[]>(
     `${API_BASE_URL}/admin/care-level-rates`,

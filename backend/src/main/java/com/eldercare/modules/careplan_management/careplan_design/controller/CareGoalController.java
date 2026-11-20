@@ -12,6 +12,7 @@ import com.eldercare.common.response.ApiResponse;
 import com.eldercare.modules.careplan_management.careplan_design.dto.addCareGoalDTO.AddCareGoalRequestDTO;
 import com.eldercare.modules.careplan_management.careplan_design.dto.addCareGoalDTO.AddCareGoalResponseDTO;
 import com.eldercare.modules.careplan_management.careplan_design.service.ICareGoalService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/care-plans/{carePlanId}/goals")
@@ -27,12 +28,20 @@ public class CareGoalController {
             @RequestBody() AddCareGoalRequestDTO request) {
         AddCareGoalRequestDTO requestDTO = new AddCareGoalRequestDTO(
                 request.careGoalName,
-                request.careGoalDescription);
+                request.careGoalDescription,
+                request.interventions);
         AddCareGoalResponseDTO responseDTO = this.careGoalService.addCareGoal(requestDTO,
                 carePlanId);
         ApiResponse<AddCareGoalResponseDTO> res = ApiResponse
                 .created("Care goal id " + responseDTO.careGoalId + " created.", responseDTO);
         return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<List<AddCareGoalResponseDTO>>> createGoals(
+            @PathVariable int carePlanId, @RequestBody List<AddCareGoalRequestDTO> requests) {
+        var created = careGoalService.addCareGoals(requests, carePlanId);
+        return ResponseEntity.ok(ApiResponse.created(created.size() + " care goals saved for review", created));
     }
 
 }

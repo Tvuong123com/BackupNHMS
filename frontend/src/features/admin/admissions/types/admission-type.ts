@@ -21,6 +21,8 @@ export interface AdmissionResponse {
   preAdmissionScreeningId: number;
   dischargeDate: string | null;
   dischargeReason: string | null;
+  roomNumber: string | null;
+  bedNumber: string | null;
   status: AdmissionStatus;
 }
 

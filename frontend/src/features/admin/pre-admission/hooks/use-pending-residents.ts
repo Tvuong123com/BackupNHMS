@@ -5,4 +5,5 @@ export const usePendingResidents = () =>
   useQuery({
     queryKey: ["residents", "pending"],
     queryFn: getPendingResidents,
+    retry: false,
   });

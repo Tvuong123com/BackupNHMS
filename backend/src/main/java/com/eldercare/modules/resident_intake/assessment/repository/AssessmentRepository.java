@@ -15,4 +15,6 @@ public interface AssessmentRepository extends JpaRepository<AssessmentEntity, Lo
   List<AssessmentEntity> findByStatusAndIsCurrentTrue(String status);
 
   Optional<AssessmentEntity> findByResidentIdAndIsCurrentTrue(Long residentId);
+
+  Optional<AssessmentEntity> findFirstByResidentIdOrderByCreatedAtDesc(Long residentId);
 }

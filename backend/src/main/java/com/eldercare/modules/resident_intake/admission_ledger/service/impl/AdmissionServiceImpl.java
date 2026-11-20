@@ -45,6 +45,15 @@ public class AdmissionServiceImpl implements AdmissionService {
     if (!"COMPLETED".equals(pre.getStatus()) || !Boolean.TRUE.equals(pre.getIsCurrent())) {
       throw new RuntimeException("Pre-admission screening is not eligible for admission.");
     }
+    if (pre.getResident().isDeleted() || !"PENDING".equalsIgnoreCase(pre.getResident().getStatus())) {
+      throw new IllegalArgumentException("This resident is no longer awaiting admission. Refresh the screening choices.");
+    }
+    if (req.getAdmissionDate() == null || req.getAdmissionDate().isAfter(java.time.LocalDate.now())) {
+      throw new IllegalArgumentException("Admission date must be today or in the past");
+    }
+    if (admRepo.findByResidentIdAndIsCurrentTrue(pre.getResident().getId()).isPresent()) {
+      throw new IllegalArgumentException("The resident already has a current admission");
+    }
 
     BedEntity bed = bedRepository.findById(req.getBedId())
         .orElseThrow(() -> new RuntimeException("Bed not found"));
@@ -124,7 +133,8 @@ public class AdmissionServiceImpl implements AdmissionService {
   @Override
   @Transactional(readOnly = true)
   public List<AdmissionSelectDTO> listActiveForSelect() {
-    return admRepo.findByIsCurrentTrueAndDischargeDateIsNull().stream().map(a -> {
+    java.time.LocalDate today = java.time.LocalDate.now();
+    return admRepo.findEligibleForAssessment(today.minusDays(14), today).stream().map(a -> {
       AdmissionSelectDTO dto = new AdmissionSelectDTO();
       dto.setId(a.getId());
       dto.setResidentName(a.getResident().getFirstName() + " " + a.getResident().getLastName());

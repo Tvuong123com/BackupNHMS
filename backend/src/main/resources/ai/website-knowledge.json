@@ -1,0 +1,163 @@
+[
+  {
+    "id": "greeting",
+    "keywords": ["hello", "good morning", "xin chào", "chào bạn"],
+    "answerEn": "Hello! I can explain our published services, admission steps, visiting information, and LOC rate examples. I can also point you to the right page. What would you like to ask?",
+    "answerVi": "Xin chào! Tôi có thể giải thích các dịch vụ đã công bố, bước tiếp nhận, thông tin thăm nom và ví dụ giá LOC, rồi chỉ bạn đến đúng trang. Bạn muốn hỏi điều gì?",
+    "source": "frontend/src/features/website/pages/home-page.tsx"
+  },
+  {
+    "id": "services",
+    "keywords": ["service", "program", "care options", "dịch vụ", "chăm sóc"],
+    "answerEn": "The Services page describes Skilled Nursing for complex nursing needs, Memory Care for cognitive support, Physical Therapy for mobility goals, Recreational Therapy for activities and social connection, and Family Support. The team can discuss which services match an individual assessment.",
+    "answerVi": "Trang Dịch vụ giới thiệu Điều dưỡng chuyên sâu cho nhu cầu điều dưỡng phức tạp, Chăm sóc trí nhớ cho hỗ trợ nhận thức, Vật lý trị liệu cho mục tiêu vận động, Trị liệu giải trí cho hoạt động và giao tiếp, cùng Hỗ trợ gia đình. Nhóm chăm sóc sẽ đối chiếu dịch vụ với đánh giá từng người.",
+    "source": "frontend/src/features/website/pages/services-page.tsx"
+  },
+  {
+    "id": "admissions",
+    "keywords": ["admission", "move in", "process", "nhập viện", "thủ tục", "tiếp nhận"],
+    "answerEn": "Admission has four published steps: initial consultation and pre-screening, in-person clinical assessment, an individual care plan, then paperwork and move-in coordination. The online pre-screener offers guidance; staff confirm eligibility and available placement.",
+    "answerVi": "Quy trình tiếp nhận được công bố gồm bốn bước: tư vấn và sàng lọc ban đầu, đánh giá lâm sàng trực tiếp, lập kế hoạch chăm sóc cá nhân, rồi hoàn tất giấy tờ và phối hợp chuyển vào. Sàng lọc trực tuyến chỉ gợi ý; nhân viên xác nhận điều kiện và chỗ phù hợp.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "timeline",
+    "keywords": ["how long", "timeline", "days", "admission time", "admission how long", "bao lâu", "mấy ngày", "thời gian"],
+    "answerEn": "The Admissions page gives 2–5 business days as a typical process, beginning with first contact. Care needs, paperwork, and available beds can change the timing; Admissions must confirm a date.",
+    "answerVi": "Trang Tiếp nhận nêu mốc thông thường 2–5 ngày làm việc từ lúc liên hệ. Nhu cầu chăm sóc, giấy tờ và giường trống có thể làm thay đổi thời gian; bộ phận tiếp nhận phải xác nhận ngày cụ thể.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "pricing",
+    "keywords": ["cost", "price", "fee", "chi phí", "giá tiền", "bảng giá", "mức giá", "giá chăm sóc", "giá phòng", "bao nhiêu tiền", "daily rate", "loc rate"],
+    "answerEn": "The LOC Rates schedule in the admin database contains daily amounts by facility and care level. The website assistant reads them as examples and labels unverified dates. A personalized quote is confirmed by Admissions.",
+    "answerVi": "Bảng LOC Rates trong dữ liệu quản trị có mức theo ngày cho từng cơ sở và bậc chăm sóc. Chatbot đọc các mức này làm ví dụ và ghi rõ khi ngày hiệu lực chưa được xác minh. Bộ phận tiếp nhận xác nhận báo giá riêng.",
+    "source": "backend/src/main/java/com/eldercare/modules/admin/facility_setup/care_level/entity/CareLevelRateEntity.java"
+  },
+  {
+    "id": "insurance",
+    "keywords": ["insurance", "medicare", "medicaid", "bảo hiểm"],
+    "answerEn": "Medicare generally does not cover long-term nursing home stays. Part A may cover up to 100 days of eligible short-term skilled nursing care per benefit period. Medicaid may cover care in a certified nursing facility under state eligibility rules. Private insurance varies by policy. Verify eligibility, facility participation, and out-of-pocket costs with the insurer and Admissions.",
+    "answerVi": "Medicare thường không trả cho lưu trú dài hạn tại viện dưỡng lão. Part A có thể trả tối đa 100 ngày điều dưỡng chuyên sâu ngắn hạn đủ điều kiện mỗi kỳ quyền lợi. Medicaid có thể trả chăm sóc tại cơ sở điều dưỡng được chứng nhận theo điều kiện của tiểu bang. Bảo hiểm tư nhân tùy hợp đồng. Cần xác minh điều kiện, cơ sở tham gia và phần tự trả với bảo hiểm và bộ phận tiếp nhận.",
+    "source": "https://www.medicare.gov/coverage/nursing-home-care; https://www.medicaid.gov/medicaid/long-term-services-supports/institutional-long-term-care/nursing-facilities"
+  },
+  {
+    "id": "visiting",
+    "keywords": ["visit", "visiting", "hours", "giờ thăm", "thăm nom"],
+    "answerEn": "The Services page lists family visiting hours as 8am–8pm daily. Ask the facility about any current visitor requirements before coming.",
+    "answerVi": "Trang Dịch vụ ghi giờ thăm gia đình 8:00–20:00 hằng ngày. Hãy hỏi cơ sở về yêu cầu thăm nom hiện hành trước khi đến.",
+    "source": "frontend/src/features/website/pages/services-page.tsx"
+  },
+  {
+    "id": "tour",
+    "keywords": ["tour", "schedule", "tham quan", "đặt lịch"],
+    "answerEn": "You can request a facility tour through the Contact page. The published page says tours are free; the team will confirm an available time.",
+    "answerVi": "Bạn có thể yêu cầu tham quan qua trang Liên hệ. Trang này ghi chuyến tham quan miễn phí; nhân viên sẽ xác nhận giờ còn trống.",
+    "source": "frontend/src/features/website/pages/contact-page.tsx"
+  },
+  {
+    "id": "contact",
+    "keywords": ["contact", "phone", "email", "address", "location", "liên hệ", "điện thoại", "địa chỉ", "ở đâu"],
+    "answerEn": "The demo Contact page lists (916) 555-9000, care@eldercare.com, 1234 Elder Lane, Sacramento, CA 95814, and office hours Monday–Friday 8am–6pm. Check the Contact page for the latest published details.",
+    "answerVi": "Trang Liên hệ của bản demo ghi (916) 555-9000, care@eldercare.com, 1234 Elder Lane, Sacramento, CA 95814 và giờ văn phòng thứ Hai–Sáu 8:00–18:00. Hãy xem trang Liên hệ để kiểm tra thông tin mới nhất.",
+    "source": "frontend/src/features/website/pages/contact-page.tsx"
+  },
+  {
+    "id": "memory-care",
+    "keywords": ["memory", "dementia", "alzheimer", "sa sút trí tuệ", "trí nhớ", "hay quên"],
+    "answerEn": "The Memory Care page explains support for people with memory or cognitive changes. The online explainer can help you organize observations and questions for a clinician; it cannot diagnose dementia or decide placement.",
+    "answerVi": "Trang Chăm sóc trí nhớ giải thích hỗ trợ cho người có thay đổi về trí nhớ hoặc nhận thức. Công cụ trực tuyến giúp bạn sắp xếp điều quan sát được và câu hỏi cho nhân viên y tế; công cụ không chẩn đoán sa sút trí tuệ hay quyết định nơi chăm sóc.",
+    "source": "frontend/src/features/website/pages/services/memory-care-page.tsx"
+  },
+  {
+    "id": "respite",
+    "keywords": ["respite", "short-term", "short term", "ngắn hạn", "nghỉ ngơi"],
+    "answerEn": "The Contact page says short-term rehabilitation and respite care are offered. Please ask the Admissions team about current availability and suitability.",
+    "answerVi": "Trang Liên hệ cho biết có dịch vụ phục hồi ngắn hạn và chăm sóc thay thế. Vui lòng hỏi bộ phận tiếp nhận về chỗ trống và mức độ phù hợp hiện tại.",
+    "source": "frontend/src/features/website/pages/contact-page.tsx"
+  },
+  {
+    "id": "care-plan",
+    "keywords": ["care plan", "needs change", "kế hoạch chăm sóc", "nhu cầu thay đổi"],
+    "answerEn": "The Admissions page says care plans are reviewed when a resident's needs change. The care team can explain how an individual plan is updated.",
+    "answerVi": "Trang Tiếp nhận cho biết kế hoạch chăm sóc được xem xét khi nhu cầu của cư dân thay đổi. Nhóm chăm sóc có thể giải thích cách cập nhật kế hoạch của từng người.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "public-ai-tools",
+    "keywords": ["website ai", "chatbot", "trợ lý ảo", "công cụ ai", "pre-screening tool", "sàng lọc trực tuyến"],
+    "answerEn": "The public website offers a chatbot, admissions pre-screening, FAQ search, care option quiz, and general memory-risk education. These tools provide information only; staff make eligibility and clinical decisions.",
+    "answerVi": "Website công khai có chatbot, sàng lọc tiếp nhận ban đầu, tìm FAQ, gợi ý lựa chọn chăm sóc và thông tin chung về trí nhớ. Các công cụ chỉ cung cấp thông tin; nhân viên quyết định điều kiện tiếp nhận và đánh giá lâm sàng.",
+    "source": "frontend/src/features/website/components/ai/website-chat-widget.tsx; frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "admin-intake-workflow",
+    "keywords": ["pre-admission screenings", "bed assignments", "health & adl", "intake workflow", "sàng lọc trước nhập", "phân giường", "đánh giá adl"],
+    "answerEn": "In the staff portal, a resident record can proceed through pre-admission screening, completed screening, admission and bed assignment, then Health & ADL assessment. Access depends on staff permissions. Resident charts are not available through the public chatbot.",
+    "answerVi": "Trong cổng nhân viên, hồ sơ cư dân đi qua sàng lọc trước tiếp nhận, hoàn tất sàng lọc, nhập cơ sở và phân giường, rồi đánh giá sức khỏe và ADL. Quyền truy cập tùy vai trò; chatbot công khai không đọc hồ sơ cư dân.",
+    "source": "frontend/src/routes/admin-routes.tsx"
+  },
+  {
+    "id": "level-of-care",
+    "keywords": ["level of care", "loc", "bậc chăm sóc", "mức độ chăm sóc"],
+    "answerEn": "Level of Care (LOC) describes the intensity of care used in assessment and billing. The staff portal maintains levels and daily rates by facility. A care plan instead describes a person's day-to-day goals and interventions.",
+    "answerVi": "Level of Care (LOC) là mức cường độ chăm sóc dùng trong đánh giá và tính phí. Cổng nhân viên quản lý các bậc và giá theo ngày của từng cơ sở. Kế hoạch chăm sóc mô tả mục tiêu và hoạt động chăm sóc hằng ngày của từng người.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx; frontend/src/features/admin/facilities/pages/loc-rates-page.tsx"
+  },
+  {
+    "id": "staff-portal-features",
+    "keywords": ["admin features", "staff portal", "dashboard", "chức năng admin", "trang quản trị", "cổng nhân viên", "ứng dụng có gì"],
+    "answerEn": "The staff portal has role-based pages for a dashboard, users and roles, resident intake, facilities and beds, LOC rates, staffing, equipment, incidents, care plans and tasks, audit logs, notifications, and settings. Staff AI tools include chart review priorities, documentation drafts, and semantic chart search. Individual records and AI outputs require authorized staff access and review.",
+    "answerVi": "Cổng nhân viên có các trang theo quyền cho dashboard, người dùng và vai trò, tiếp nhận cư dân, cơ sở và giường, bảng giá LOC, nhân sự, thiết bị, sự cố, kế hoạch và công việc chăm sóc, nhật ký truy cập, thông báo và cài đặt. Công cụ AI nhân viên gồm ưu tiên rà soát hồ sơ, bản nháp tài liệu và tìm kiếm ngữ nghĩa trong hồ sơ. Hồ sơ từng người và kết quả AI chỉ dành cho nhân viên có quyền và phải được rà soát.",
+    "source": "frontend/src/common/admin-nav.ts; frontend/src/features/admin/dashboard/pages/dashboard-page.tsx"
+  },
+  {
+    "id": "admission-documents",
+    "keywords": ["documents", "paperwork", "bring to", "medical records", "giấy tờ", "hồ sơ cần", "cần mang", "chuẩn bị hồ sơ"],
+    "answerEn": "For an initial admission discussion, the Admissions page lists recent medical records or hospital discharge summary, physician orders and medication list, insurance information, applicable legal documents, identification, and emergency contacts. Admissions will confirm which items are needed for your case.",
+    "answerVi": "Để trao đổi tiếp nhận ban đầu, trang Tiếp nhận liệt kê hồ sơ y tế gần đây hoặc giấy ra viện, y lệnh và danh sách thuốc, thông tin bảo hiểm, giấy tờ pháp lý nếu có, giấy tờ tùy thân và người liên hệ khẩn cấp. Bộ phận tiếp nhận sẽ xác nhận giấy tờ cần cho từng trường hợp.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "availability",
+    "keywords": ["available bed", "room available", "vacancy", "waitlist", "chỗ trống", "giường trống", "còn phòng", "danh sách chờ"],
+    "answerEn": "The website does not publish live bed availability. Availability can vary by care needs and room type. Contact Admissions to ask about a suitable opening or waitlist.",
+    "answerVi": "Website không công bố giường trống theo thời gian thực. Chỗ phù hợp còn tùy nhu cầu chăm sóc và loại phòng. Hãy hỏi bộ phận tiếp nhận về chỗ trống hoặc danh sách chờ.",
+    "source": "frontend/src/features/website/pages/contact-page.tsx"
+  },
+  {
+    "id": "initial-consultation",
+    "keywords": ["consultation", "first meeting", "initial assessment", "tư vấn ban đầu", "buổi gặp đầu", "đánh giá ban đầu miễn phí"],
+    "answerEn": "The Admissions page describes an initial phone or in-person consultation as complimentary. It helps the team understand care needs and explain next steps; it is separate from the later clinical assessment.",
+    "answerVi": "Trang Tiếp nhận mô tả buổi tư vấn ban đầu qua điện thoại hoặc trực tiếp là miễn phí. Buổi này giúp nhóm tiếp nhận hiểu nhu cầu chăm sóc và giải thích bước tiếp theo; đánh giá lâm sàng diễn ra sau đó.",
+    "source": "frontend/src/features/website/pages/admissions-page.tsx"
+  },
+  {
+    "id": "therapy",
+    "keywords": ["physical therapy", "rehabilitation", "post-surgery", "stroke recovery", "vật lý trị liệu", "phục hồi chức năng", "sau phẫu thuật", "sau đột quỵ"],
+    "answerEn": "The Physical Therapy page describes rehabilitation aimed at mobility, strength, and daily function after illness, injury, or surgery. A therapist and clinical team must assess whether a specific program is appropriate.",
+    "answerVi": "Trang Vật lý trị liệu mô tả phục hồi nhằm cải thiện vận động, sức mạnh và sinh hoạt hằng ngày sau bệnh, chấn thương hoặc phẫu thuật. Chuyên viên trị liệu và nhóm lâm sàng phải đánh giá chương trình phù hợp cho từng người.",
+    "source": "frontend/src/features/website/pages/services/physical-therapy-page.tsx"
+  },
+  {
+    "id": "family-support",
+    "keywords": ["family support", "caregiver support", "support group", "hỗ trợ gia đình", "người chăm sóc", "nhóm hỗ trợ"],
+    "answerEn": "The Family Support page describes caregiver education, guidance, and support for families. Contact the team about the current schedule and options.",
+    "answerVi": "Trang Hỗ trợ gia đình giới thiệu giáo dục người chăm sóc, hướng dẫn và hỗ trợ gia đình. Hãy liên hệ nhóm chăm sóc để hỏi lịch và lựa chọn hiện có.",
+    "source": "frontend/src/features/website/pages/services/family-support-page.tsx"
+  },
+  {
+    "id": "online-tool-limits",
+    "keywords": ["guarantee admission", "online screening", "care navigator", "pre-screener", "ai decision", "cam kết tiếp nhận", "sàng lọc trực tuyến", "ai quyết định", "đề xuất của ai"],
+    "answerEn": "The Care Navigator and Admission Pre-Screener organize the answers you provide and suggest topics or services to discuss. They do not determine eligibility, diagnose a condition, assign a care level, or reserve a bed. Admissions and licensed clinicians review those decisions.",
+    "answerVi": "Care Navigator và công cụ sàng lọc trước tiếp nhận sắp xếp câu trả lời bạn cung cấp và gợi ý dịch vụ hoặc vấn đề cần trao đổi. Chúng không quyết định điều kiện tiếp nhận, chẩn đoán, phân bậc chăm sóc hay giữ giường. Bộ phận tiếp nhận và nhân viên y tế có chuyên môn sẽ đánh giá các quyết định đó.",
+    "source": "frontend/src/features/website/components/ai/ai-care-quiz.tsx; frontend/src/features/website/components/ai/ai-eligibility-screener.tsx"
+  },
+  {
+    "id": "privacy",
+    "keywords": ["resident record", "who lives", "patient name", "medical chart", "hồ sơ cư dân", "ai đang ở", "thông tin bệnh nhân", "bệnh án"],
+    "answerEn": "The public chatbot cannot confirm who lives at the facility or disclose a resident's chart. Staff use a separate, permission-controlled portal for resident records.",
+    "answerVi": "Chatbot công khai không xác nhận ai đang sống tại cơ sở và không cung cấp hồ sơ cư dân. Nhân viên dùng cổng riêng có kiểm soát quyền để xem hồ sơ.",
+    "source": "frontend/src/routes/admin-routes.tsx; backend/src/main/java/com/eldercare/config/SecurityConfig.java"
+  }
+]

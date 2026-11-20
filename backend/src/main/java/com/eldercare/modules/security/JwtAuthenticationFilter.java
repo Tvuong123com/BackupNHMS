@@ -40,6 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.replace(" ", "_")));
                     authorities.add(new SimpleGrantedAuthority(role));
+                    if (role.equalsIgnoreCase("DON - Director of Nursing")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_DON"));
+                    } else if (role.equalsIgnoreCase("Nurse_(LPN/RN)")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_NURSE"));
+                    } else if (role.equalsIgnoreCase("CNA_(Caregiver)")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_CNA"));
+                    }
                     // Grant admin access for system admin/nha admin/admin
                     if (role.equalsIgnoreCase("System_Administrator") || role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("NHA_ADMIN") || role.contains("Admin")) {
                         authorities.add(new SimpleGrantedAuthority("ROLE_System_Administrator"));

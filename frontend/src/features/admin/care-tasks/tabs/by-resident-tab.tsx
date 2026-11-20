@@ -10,8 +10,14 @@ import { Button } from "@/components/ui/button";
 
 import type { GroupedByResidentCard, EnrichedTaskRow } from "@/services/care-tasks-api";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
 
 export const ByResidentTab = () => {
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedResidentId = Number(searchParams.get("residentId"));
+  const residentId = Number.isSafeInteger(linkedResidentId) && linkedResidentId > 0 ? linkedResidentId : undefined;
   const [page, setPage] = useState(0);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [status, setStatus] = useState<string>("all");
@@ -22,6 +28,7 @@ export const ByResidentTab = () => {
   const params = {
     page,
     size: 10,
+    residentId,
     date: date ? format(date, "yyyy-MM-dd") : undefined,
     ...(status !== "all" && { status }),
     ...(taskType !== "all" && { taskType }),
@@ -57,6 +64,7 @@ export const ByResidentTab = () => {
 
   return (
     <div className="flex flex-col w-full gap-5 mt-5">
+      {residentId && <p className="text-sm">Showing Resident #{residentId}. <button type="button" className="text-blue-600 underline" onClick={() => { setPage(0); setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete("residentId"); return next; }); }}>Show all residents</button></p>}
       {/* Filter bar */}
       <ResidentTaskFilterBar
         date={date}
@@ -103,7 +111,8 @@ export const ByResidentTab = () => {
                 className="rounded-xl border border-border bg-card shadow-sm overflow-hidden"
               >
                 {/* Card header — Resident identity + status */}
-                <ResidentCardHeader resident={residentMapped} />
+                <ResidentCardHeader resident={residentMapped} tasks={resident.tasks}
+                  onVoiceConfirmed={() => void queryClient.invalidateQueries({ queryKey: ["care-tasks-by-resident"] })} />
 
                 {/* Table */}
                 <div className="overflow-x-auto">

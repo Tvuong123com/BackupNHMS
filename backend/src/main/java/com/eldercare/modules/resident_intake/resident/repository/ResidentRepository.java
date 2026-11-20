@@ -19,7 +19,13 @@ public interface ResidentRepository
 
        List<ResidentEntity> findByIsDeletedFalse();
 
+       List<ResidentEntity> findByStatusIgnoreCaseAndIsDeletedFalse(String status);
+
        List<ResidentEntity> findByStatus(String status);
+       @Query("select r from ResidentEntity r where r.isDeleted = false and upper(r.status) = 'PENDING' "
+                     + "and not exists (select p.id from PreAdmissionScreeningEntity p where p.resident.id = r.id "
+                     + "and p.isCurrent = true and p.status in ('DRAFT', 'COMPLETED'))")
+       List<ResidentEntity> findEligibleForScreening();
 
        @Query("""
                      SELECT r

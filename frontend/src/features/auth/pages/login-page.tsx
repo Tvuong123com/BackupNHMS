@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router";
 import { authService, type LoginRequest } from "../services/auth-service";
+import { useQueryClient } from "@tanstack/react-query";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Email or Phone is required"),
@@ -16,6 +17,7 @@ export const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -30,9 +32,9 @@ export const LoginPage = () => {
     setError(null);
     try {
       const response = await authService.Login(data);
-      // In a real app, save token to context/Zustand and localStorage
       localStorage.setItem("token", response.token);
       localStorage.setItem("eldcare_token", response.token);
+      queryClient.removeQueries({ queryKey: ["currentUser"] });
       navigate("/admin"); // Redirect to dashboard
     } catch (err: any) {
       if (err.response?.data?.message) {

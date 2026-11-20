@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserAvatarMenuProps {
   name: string;
@@ -23,10 +24,12 @@ export const UserAvatarMenu = ({
   profilePath,
 }: UserAvatarMenuProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("eldcare_token");
+    queryClient.removeQueries({ queryKey: ["currentUser"] });
     navigate("/login");
   };
 

@@ -46,15 +46,16 @@ const contactInfo = [
       </svg>
     ),
     title: "Hours",
-    value: "Mon–Fri: 8am–6pm · 24/7 Emergency",
+    value: "Mon–Fri: 8am–6pm",
   },
 ];
 
 const faqs = [
-  { q: "How quickly can we arrange a tour?", a: "We can typically arrange a facility tour within 24–48 hours of your request. Tours are free and include a meet-and-greet with our care coordinator." },
-  { q: "What should I bring to the first meeting?", a: "Please bring any relevant medical records, a list of current medications, insurance information, and any legal documents such as power of attorney." },
-  { q: "Is there a waitlist for admission?", a: "Availability varies by care type. We recommend reaching out early so we can assess needs and discuss options, including our waitlist process if needed." },
-  { q: "Do you offer short-term or respite care?", a: "Yes. We offer short-term rehabilitation stays, respite care for family caregivers, and trial stays so residents can experience our community before committing." },
+  { q: "How quickly can we arrange a tour?", a: "Tours are listed as free on this website. Request one through the Contact page and the team will confirm an available time." },
+  { q: "What should I bring to the first meeting?", a: "If available, bring recent medical records or a discharge summary, a current medication list, insurance information, identification, any applicable legal documents, and emergency contacts. Admissions will confirm the exact list for your case." },
+  { q: "Is there a waitlist for admission?", a: "The website does not show live bed availability. Ask Admissions about a suitable opening or waitlist for the care and room type needed." },
+  { q: "Do you offer short-term or respite care?", a: "The website describes short-term rehabilitation and respite care. Admissions can confirm current availability and whether either fits your situation." },
+  { q: "Can the website AI confirm coverage or a bed?", a: "No. The AI tools provide information and organize your questions. Admissions and the insurer must confirm participation, benefits, eligibility, and placement." },
 ];
 
 export default function ContactPage() {

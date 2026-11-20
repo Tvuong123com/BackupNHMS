@@ -41,7 +41,7 @@ public class PreAdmissionScreeningServiceTests {
 
   @Test // resident does not exist -> throws exception
   void create_residentNotFound_throwsException() {
-    when(residentRepo.findById(99L)).thenReturn(Optional.empty());
+    when(residentRepo.findByIdAndIsDeletedFalse(99L)).thenReturn(Optional.empty());
     PreCreateRequest req = new PreCreateRequest();
 
     req.setResidentId(99L);
@@ -53,10 +53,11 @@ public class PreAdmissionScreeningServiceTests {
   void create_existingDraftCurrent_throwsException() {
     ResidentEntity resident = new ResidentEntity();
     resident.setId(1L);
+    resident.setStatus("PENDING");
     PreAdmissionScreeningEntity oldPre = new PreAdmissionScreeningEntity();
     oldPre.setStatus("DRAFT");
 
-    when(residentRepo.findById(1L)).thenReturn(Optional.of(resident));
+    when(residentRepo.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(resident));
     when(preRepo.findByResidentIdAndIsCurrentTrue(1L)).thenReturn(Optional.of(oldPre));
 
     PreCreateRequest req = new PreCreateRequest();
@@ -71,12 +72,13 @@ public class PreAdmissionScreeningServiceTests {
   void create_existingNonDraftCurrent_closesOldAndCreatesNew() {
     ResidentEntity resident = new ResidentEntity();
     resident.setId(1L);
+    resident.setStatus("PENDING");
 
     PreAdmissionScreeningEntity oldPre = new PreAdmissionScreeningEntity();
     oldPre.setStatus("REJECTED");
     oldPre.setIsCurrent(true);
 
-    when(residentRepo.findById(1L)).thenReturn(Optional.of(resident));
+    when(residentRepo.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(resident));
     when(preRepo.findByResidentIdAndIsCurrentTrue(1L)).thenReturn(Optional.of(oldPre));
     when(preRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -92,10 +94,11 @@ public class PreAdmissionScreeningServiceTests {
   void create_noExistingCurrent_createsNewDraft() {
     ResidentEntity resident = new ResidentEntity();
     resident.setId(2L);
+    resident.setStatus("PENDING");
     resident.setFirstName("Hien");
     resident.setLastName("Nguyen");
 
-    when(residentRepo.findById(2L)).thenReturn(Optional.of(resident));
+    when(residentRepo.findByIdAndIsDeletedFalse(2L)).thenReturn(Optional.of(resident));
     when(preRepo.findByResidentIdAndIsCurrentTrue(2L)).thenReturn(Optional.empty());
     when(preRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -192,7 +195,7 @@ public class PreAdmissionScreeningServiceTests {
     pre.setId(10L);
     pre.setResident(r);
 
-    when(preRepo.findByStatusAndIsCurrentTrue("COMPLETED")).thenReturn(List.of(pre));
+    when(preRepo.findEligibleForAdmission()).thenReturn(List.of(pre));
 
     List<PreSelectDTO> result = service.listCompletedForSelect();
     assertEquals(1, result.size());
@@ -201,7 +204,7 @@ public class PreAdmissionScreeningServiceTests {
 
   @Test // no records found -> returns empty list
   void listCompletedForSelect_noResults_returnsEmptyList() {
-    when(preRepo.findByStatusAndIsCurrentTrue("COMPLETED")).thenReturn(List.of());
+    when(preRepo.findEligibleForAdmission()).thenReturn(List.of());
     assertTrue(service.listCompletedForSelect().isEmpty());
   }
 }

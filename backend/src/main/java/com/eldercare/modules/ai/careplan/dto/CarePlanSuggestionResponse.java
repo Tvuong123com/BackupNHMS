@@ -14,6 +14,7 @@ import java.util.List;
 public class CarePlanSuggestionResponse {
     private String residentSummary;
     private List<SuggestedGoalDTO> suggestedGoals;
+    private String generationMethod;
 
     @Data
     @Builder

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Users,
   UserCheck,
@@ -8,6 +8,8 @@ import {
 
 import { useUsers } from "@/hooks/use-users";
 import type { UserApiResponse } from "@/types/user";
+import { getRoleList } from "@/features/admin/roles/services/role.service";
+import type { Role } from "@/features/admin/roles/types/role.type";
 
 import { StatisticCard } from "./ul-statistic-card";
 import { SearchFilter } from "./ul-search-filter";
@@ -27,6 +29,18 @@ export function UserList({
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("ALL");
   const [status, setStatus] = useState("ALL");
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [rolesError, setRolesError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    getRoleList().then((items) => {
+      if (active) setRoles(items.filter((item) => !item.isDeleted));
+    }).catch(() => {
+      if (active) setRolesError("Could not load roles. Reload the page to try again.");
+    });
+    return () => { active = false; };
+  }, []);
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -118,6 +132,7 @@ export function UserList({
       </div>
 
       <SearchFilter
+        roles={roles}
         search={search}
         role={role}
         status={status}
@@ -142,9 +157,9 @@ export function UserList({
         onAdd={onAdd}
       />
 
-      {error && (
+      {(error || rolesError) && (
         <div className="rounded-lg bg-red-50 p-4 text-red-600">
-          {error}
+          {error || rolesError}
         </div>
       )}
 

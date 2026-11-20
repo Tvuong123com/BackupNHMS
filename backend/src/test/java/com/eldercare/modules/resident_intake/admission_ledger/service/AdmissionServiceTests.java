@@ -86,6 +86,7 @@ public class AdmissionServiceTests {
   void create_validPre_noExistingAdmission_createsSuccessfully() {
     ResidentEntity resident = new ResidentEntity();
     resident.setId(1L);
+    resident.setStatus("PENDING");
     resident.setFirstName("A");
     resident.setLastName("B");
     PreAdmissionScreeningEntity pre = new PreAdmissionScreeningEntity();
@@ -120,9 +121,10 @@ public class AdmissionServiceTests {
 
   @Test // resident already has current admission -> old admission is closed
         // (isCurrent=false)
-  void create_existingCurrentAdmission_closesOldOne() {
+  void create_existingCurrentAdmission_rejectsDuplicateAdmission() {
     ResidentEntity resident = new ResidentEntity();
     resident.setId(1L);
+    resident.setStatus("PENDING");
     PreAdmissionScreeningEntity pre = new PreAdmissionScreeningEntity();
     pre.setId(5L);
     pre.setStatus("COMPLETED");
@@ -134,25 +136,14 @@ public class AdmissionServiceTests {
 
     when(preRepo.findById(5L)).thenReturn(Optional.of(pre));
     when(admRepo.findByResidentIdAndIsCurrentTrue(1L)).thenReturn(Optional.of(oldAdm));
-    when(admRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
-    when(residentRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
-    BedEntity bed = new BedEntity();
-    RoomEntity room = new RoomEntity();
-    FacilityEntity facility = new FacilityEntity();
-    facility.setId(2L);
-    room.setFacility(facility);
-    bed.setRoom(room);
-    when(bedRepository.findById(10L)).thenReturn(Optional.of(bed));
-
     AdmissionCreateRequest req = new AdmissionCreateRequest();
     req.setPreAdmissionScreeningId(5L);
     req.setFacilityId(2L);
     req.setAdmissionDate(LocalDate.now());
     req.setBedId(10L);
 
-    service.create(req);
-
-    assertFalse(oldAdm.getIsCurrent());
+    assertThrows(IllegalArgumentException.class, () -> service.create(req));
+    assertTrue(oldAdm.getIsCurrent());
   }
 
   @Test // id does not exist -> throws exception
@@ -195,14 +186,14 @@ public class AdmissionServiceTests {
     r.setLastName("Y");
     adm.setResident(r);
 
-    when(admRepo.findByIsCurrentTrueAndDischargeDateIsNull()).thenReturn(List.of(adm));
+    when(admRepo.findEligibleForAssessment(LocalDate.now().minusDays(14), LocalDate.now())).thenReturn(List.of(adm));
 
     assertEquals(1, service.listActiveForSelect().size());
   }
 
   @Test // no active admissions -> returns empty list
   void listActiveForSelect_noActive_returnsEmpty() {
-    when(admRepo.findByIsCurrentTrueAndDischargeDateIsNull()).thenReturn(List.of());
+    when(admRepo.findEligibleForAssessment(LocalDate.now().minusDays(14), LocalDate.now())).thenReturn(List.of());
     assertTrue(service.listActiveForSelect().isEmpty());
   }
 }

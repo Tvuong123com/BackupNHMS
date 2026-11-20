@@ -5,6 +5,7 @@ import {
   ServiceFaq,
   ServiceCta,
 } from "../../components/services/service-detail-shared";
+import { AiFamilyDigestPreview } from "../../components/ai/ai-family-digest-preview";
 
 
 const ACCENT = "#DC2626";
@@ -101,6 +102,13 @@ export default function FamilySupportPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* AI Family Daily Update Digest */}
+      <section className="py-16 bg-[#FEF2F2]">
+        <div className="max-w-4xl mx-auto px-6">
+          <AiFamilyDigestPreview />
         </div>
       </section>
 

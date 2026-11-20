@@ -19,6 +19,7 @@ export interface AssessmentListParams {
 export const getMetrics = async () => {
   const { data } = await axiosInstance.get<ApiResponse<AssessmentMetricDTO[]>>(
     `${BASE_URL}/metrics`,
+    { timeout: 15000 },
   );
   return data;
 };

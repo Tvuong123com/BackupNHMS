@@ -1,6 +1,7 @@
 package com.eldercare.modules.admin.facility_setup.facility.facility_profile.service;
 
 import com.eldercare.common.dto.PagedResponse;
+import com.eldercare.common.enums.BedStatus;
 import com.eldercare.exception.custom.BadRequestException;
 import com.eldercare.exception.custom.ResourceNotFoundException;
 import com.eldercare.modules.admin.facility_setup.facility.dto.request.FacilityCreateRequest;
@@ -11,6 +12,8 @@ import com.eldercare.modules.admin.facility_setup.facility.facility_profile.enti
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.mapper.FacilityMapper;
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.repository.FacilityRepository;
 import com.eldercare.modules.admin.facility_setup.facility.facility_profile.service.impl.FacilityServiceImpl;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.entity.BedEntity;
+import com.eldercare.modules.admin.facility_setup.facility.facility_layout.entity.RoomEntity;
 import com.eldercare.modules.admin.facility_setup.facility.facility_layout.repository.RoomRepository;
 import com.eldercare.modules.admin.facility_setup.facility.facility_layout.repository.BedRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -417,6 +420,24 @@ class FacilityServiceTests {
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getId()).isEqualTo(1L);
             assertThat(result.get(0).getName()).isEqualTo("Sunrise Care Home");
+        }
+
+        @Test
+        void getFacilitiesForSelect_ExcludesOccupiedBeds() {
+            RoomEntity room = RoomEntity.builder().id(2L).roomNumber("101")
+                    .facility(facilityEntity).build();
+            BedEntity free = BedEntity.builder().id(3L).bedNumber("A")
+                    .room(room).status(BedStatus.AVAILABLE).build();
+            BedEntity occupied = BedEntity.builder().id(4L).bedNumber("B")
+                    .room(room).status(BedStatus.OCCUPIED).build();
+            when(facilityRepository.findByIsDeletedFalse()).thenReturn(List.of(facilityEntity));
+            when(roomRepository.findAll()).thenReturn(List.of(room));
+            when(bedRepository.findAll()).thenReturn(List.of(free, occupied));
+
+            List<FacilitySelectResponse> result = facilityService.getFacilitiesForSelect();
+
+            assertThat(result.get(0).getRooms().get(0).getBeds()).hasSize(1);
+            assertThat(result.get(0).getRooms().get(0).getBeds().get(0).getId()).isEqualTo(3L);
         }
     }
 }

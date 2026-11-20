@@ -30,14 +30,16 @@ public class PreAdmissionScreeningServiceImpl implements PreAdmissionScreeningSe
   @Override
   @Transactional
   public PreResponse create(PreCreateRequest req) {
-    ResidentEntity resident = residentRepo.findById(req.getResidentId())
+    ResidentEntity resident = residentRepo.findByIdAndIsDeletedFalse(req.getResidentId())
         .orElseThrow(() -> new RuntimeException("Resident not found"));
+    if (!"PENDING".equalsIgnoreCase(resident.getStatus())) throw new IllegalArgumentException("Only a pending resident can start pre-admission screening");
 
     preRepo.findByResidentIdAndIsCurrentTrue(resident.getId())
         .ifPresent(old -> {
           if ("DRAFT".equals(old.getStatus())) {
             throw new RuntimeException("Resident already has a draft pre-admission screening in progress");
           }
+          if ("COMPLETED".equals(old.getStatus())) throw new IllegalArgumentException("A completed screening is already awaiting admission");
           old.setIsCurrent(false);
           preRepo.save(old);
         });
@@ -63,7 +65,7 @@ public class PreAdmissionScreeningServiceImpl implements PreAdmissionScreeningSe
   @Override
   @Transactional(readOnly = true)
   public List<PreSelectDTO> listCompletedForSelect() {
-    return preRepo.findByStatusAndIsCurrentTrue("COMPLETED").stream().map(p -> {
+    return preRepo.findEligibleForAdmission().stream().map(p -> {
       PreSelectDTO dto = new PreSelectDTO();
       dto.setId(p.getId());
       dto.setResidentName(p.getResident().getFirstName() + " " + p.getResident().getLastName());

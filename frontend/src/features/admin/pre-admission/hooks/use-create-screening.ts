@@ -11,6 +11,7 @@ export const useCreateScreening = () => {
     mutationFn: createScreening,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["pre-admissions"] });
+      queryClient.invalidateQueries({ queryKey: ["residents", "pending"] });
       toast.success(data.message ?? "Created successfully");
     },
     onError: (error: AxiosError<ApiResponse<null>>) => {

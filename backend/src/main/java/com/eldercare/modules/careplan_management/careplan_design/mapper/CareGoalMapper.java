@@ -2,6 +2,8 @@ package com.eldercare.modules.careplan_management.careplan_design.mapper;
 
 import com.eldercare.modules.careplan_management.careplan_design.entity.CareGoalEntity;
 import com.eldercare.modules.careplan_management.careplan_design.repository.database_schema.CareGoalSchema;
+import com.eldercare.modules.careplan_management.careplan_design.repository.database_schema.CareInterventionSchema;
+import java.util.ArrayList;
 
 public class CareGoalMapper {
     public static CareGoalEntity toEntity(CareGoalSchema schema) {
@@ -34,7 +36,17 @@ public class CareGoalMapper {
         schema.setCarePlan(null);
         schema.setDescription(entity.getDescription());
         schema.setStatus(entity.getStatus());
-        // schema.setListCareIntervention(null); handle this later
+        var interventions = new ArrayList<CareInterventionSchema>();
+        if (entity.getListCareIntervention() != null) {
+            for (var intervention : entity.getListCareIntervention()) {
+                var row = new CareInterventionSchema();
+                row.setTitle(intervention.getName());
+                row.setAssignedRole(intervention.getAssinedRole());
+                row.setCareGoal(schema);
+                interventions.add(row);
+            }
+        }
+        schema.setListCareIntervention(interventions);
         schema.setTitle(entity.getName());
         return schema;
     }

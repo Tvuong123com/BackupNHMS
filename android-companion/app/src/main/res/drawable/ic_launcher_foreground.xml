@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Soft Drop Shadow -->
+    <path
+        android:fillColor="#26000000"
+        android:pathData="M51,29h6a5,5 0 0,1 5,5v46a5,5 0 0,1 -5,5h-6a5,5 0 0,1 -5,-5v-46a5,5 0 0,1 5,-5z" />
+    <path
+        android:fillColor="#26000000"
+        android:pathData="M31,49h46a5,5 0 0,1 5,5v6a5,5 0 0,1 -5,5h-46a5,5 0 0,1 -5,-5v-6a5,5 0 0,1 5,-5z" />
+
+    <!-- Pure White Medical Cross - Vertical Pillar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,27h6a5,5 0 0,1 5,5v46a5,5 0 0,1 -5,5h-6a5,5 0 0,1 -5,-5v-46a5,5 0 0,1 5,-5z" />
+
+    <!-- Pure White Medical Cross - Horizontal Arm -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M31,47h46a5,5 0 0,1 5,5v6a5,5 0 0,1 -5,5h-46a5,5 0 0,1 -5,-5v-6a5,5 0 0,1 5,-5z" />
+
+    <!-- Central Eldercare Heart Motif (Coral Red) -->
+    <path
+        android:fillColor="#E11D48"
+        android:pathData="M54,61.5 C53.5,61.5 45.5,56 45.5,51.5 C45.5,48.2 48.2,46 51.5,46 C53.1,46 53.8,46.8 54,47.6 C54.2,46.8 54.9,46 56.5,46 C59.8,46 62.5,48.2 62.5,51.5 C62.5,56 54.5,61.5 54,61.5 Z" />
+
+    <!-- Little Stethoscope Arc Highlight inside Heart -->
+    <path
+        android:pathData="M50,51 C50,49 51.5,48 53,48"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+</vector>

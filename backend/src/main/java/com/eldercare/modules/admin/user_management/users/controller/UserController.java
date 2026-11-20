@@ -41,7 +41,7 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PreAuthorize("hasRole('NHA_ADMIN') or hasRole('DON')")
+    @PreAuthorize("hasAnyRole('System_Administrator', 'ADMIN', 'NHA_ADMIN', 'DON', 'NURSE')")
     @GetMapping(RouteConstants.API_USERS_CNAS)
     public ResponseEntity<List<UserResponse>> getActiveCnas() {
         List<UserResponse> cnas = userService.getActiveCnas();

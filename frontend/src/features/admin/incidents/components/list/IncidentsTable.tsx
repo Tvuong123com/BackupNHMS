@@ -5,7 +5,8 @@ import {
   type IncidentDetailsData,
 } from "@/features/admin/incidents/components/report/incident-detail-view";
 import { ChartLockedModal } from "@/features/admin/incidents/components/report/chart-locked-modal";
-import { incidentsApi, type IncidentApiResponse } from "@/services/incidents/incidents-api";
+import { incidentsApi } from "@/services/incidents/incidents-api";
+import { toIncidentDetail } from "../../utils/transform";
 
 type Incident = {
   id: number;
@@ -18,59 +19,6 @@ type Incident = {
   status: string;
   chart: string;
 };
-
-const typeLabels: Record<string, string> = {
-  FALL: "Fall",
-  MEDICATION_ERROR: "Medication Error",
-  ALTERCATION: "Altercation",
-  SKIN_TEAR: "Skin Tear",
-};
-
-const statusLabels: Record<string, string> = {
-  OPEN: "Open",
-  UNDER_INVESTIGATION: "Under Investigation",
-  SUBMITTED: "Submitted",
-  RESOLVED: "Resolved",
-};
-
-// Converts the full detail response from GET /api/v1/incidents/{id}
-// into the shape IncidentDetailPage expects.
-function mapFullDetail(api: IncidentApiResponse): IncidentDetailsData {
-  const room = api.resident.bed?.room?.roomNumber;
-
-  let sla = "—";
-  if (api.slaCountDown !== null && api.slaCountDown !== undefined) {
-    sla = api.slaCountDown < 0 ? "OVERDUE" : `${api.slaCountDown}h left`;
-  }
-
-  const timeline = (api.timelines ?? [])
-    .slice()
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)) // newest first
-    .map((t, idx) => ({
-      title: t.action,
-      actor: t.actor?.displayName ?? "System",
-      time: t.createdAt.replace("T", " ").slice(0, 16),
-      filled: idx === 0,
-    }));
-
-  return {
-    id: `INC-${api.id}`,
-    resident: api.resident.displayName,
-    room,
-    incidentType: typeLabels[api.incidentType] ?? api.incidentType,
-    severity: api.severity.levelName,
-    status: statusLabels[api.status] ?? api.status,
-    reported: api.reportedAt ? api.reportedAt.replace("T", " ").slice(0, 16) : "",
-    reportedBy: api.reporter?.displayName,
-    location: api.location,
-    description: api.description,
-    witnesses: api.witnesses,
-    chartStatus: api.isLocked ? "Locked" : "Unlocked",
-    sla,
-    slaDeadlineHours: api.slaDeadlineHours,
-    timeline: timeline.length > 0 ? timeline : undefined,
-  };
-}
 
 export function IncidentsTable({
   incidents,
@@ -101,7 +49,7 @@ export function IncidentsTable({
   const fallbackFrom = (inc: Incident): IncidentDetailsData => {
     const [name, room] = inc.resident.split(" · ");
     return {
-      id: `INC-${2000 + inc.id}`,
+      id: `INC-${inc.id}`,
       resident: name ?? inc.resident,
       room,
       incidentType: inc.type,
@@ -121,7 +69,7 @@ export function IncidentsTable({
     setDetailLoading(true);
     try {
       const full = await incidentsApi.getById(incident.id);
-      setDetail(mapFullDetail(full));
+      setDetail(toIncidentDetail(full));
     } catch (e: any) {
       setDetailError(e?.response?.data?.message ?? e.message ?? "Không tải được chi tiết incident");
       // keep the fallback data already set above
@@ -217,7 +165,7 @@ export function IncidentsTable({
           open
           residentName={selected.resident.split(" · ")[0] ?? selected.resident}
           lockedAt={detail?.reported ?? selected.reported}
-          incidentId={detail?.id ?? `INC-${2000 + selected.id}`}
+          incidentId={detail?.id ?? `INC-${selected.id}`}
           onBackToProfile={close}
           onViewIncident={() => setShowDetailAnyway(true)}
         />

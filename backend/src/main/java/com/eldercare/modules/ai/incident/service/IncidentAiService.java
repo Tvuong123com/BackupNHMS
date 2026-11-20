@@ -31,11 +31,13 @@ public class IncidentAiService {
             }
 
             Quy tắc xác định Severity:
-            - EMERGENCY: Đe dọa tính mạng ngay lập tức, ngưng tim, chấn thương sọ não, bất tỉnh.
-            - CRITICAL: Gãy xương, vết thương rách sâu cần cấp cứu ngoại viện, biến cố tim mạch.
-            - HIGH: Té ngã có xây xát, nhầm thuốc nhưng chưa nguy kịch, đi lạc khỏi khuôn viên.
-            - MEDIUM: Va chạm nhẹ, trầy da nhỏ, tranh cãi kích động nhẹ.
-            - LOW: Sự cố nhỏ không gây thương tích hoặc ảnh hưởng sức khỏe.
+            - EMERGENCY: Đe dọa tính mạng ngay lập tức, ngưng tim, nghẹn sặc suy hô hấp, chấn thương sọ não, hôn mê bất tỉnh.
+            - CRITICAL: Gãy cổ xương đùi, vết thương rách sâu cần cấp cứu ngoại viện, đi lạc ra ngoài khuôn viên (Elopement).
+            - HIGH: Té ngã có xây xát hoặc va đập vùng đầu, nhầm thuốc cần theo dõi, kích động hành vi bạo lực.
+            - MEDIUM: Va chạm nhẹ, trầy xước nông, tranh cãi kích động nhẹ tự thoái lui.
+            - LOW: Sự cố cơ sở vật chất nhỏ không gây tổn hại sức khỏe cư dân.
+            Chỉ nêu các bước rà soát và báo cáo theo quy trình đã được cơ sở phê duyệt.
+            Không tự đặt lịch theo dõi, thời hạn thông báo, thủ thuật hoặc phác đồ cấp cứu.
             """;
 
     public IncidentAnalysisResponse classifyIncident(IncidentAnalysisRequest request) {
@@ -51,7 +53,6 @@ public class IncidentAiService {
 
             String rawResponse = aiExecutionService.execute(CLASSIFY_SYSTEM_PROMPT, userPrompt.toString());
 
-            log.info("AI raw classification response: {}", rawResponse);
 
             if (rawResponse == null || rawResponse.isBlank()) {
                 return createFallbackResponse(request.getDescription());
@@ -59,7 +60,7 @@ public class IncidentAiService {
 
             return parseJsonResponse(rawResponse, request.getDescription());
         } catch (Exception e) {
-            log.error("Lỗi khi phân loại sự cố bằng AI: {}", e.getMessage(), e);
+            log.warn("Không phân loại được sự cố bằng AI: {}", e.getClass().getSimpleName());
             return createFallbackResponse(request.getDescription());
         }
     }
@@ -67,65 +68,60 @@ public class IncidentAiService {
     private IncidentAnalysisResponse parseJsonResponse(String rawResponse, String description) {
         try {
             String json = rawResponse.trim();
-            // Trích xuất JSON nếu LLM trả về markdown block ```json ... ```
-            if (json.contains("```json")) {
-                int start = json.indexOf("```json") + 7;
-                int end = json.indexOf("```", start);
-                if (end > start) {
-                    json = json.substring(start, end).trim();
-                }
-            } else if (json.contains("```")) {
-                int start = json.indexOf("```") + 3;
-                int end = json.indexOf("```", start);
-                if (end > start) {
-                    json = json.substring(start, end).trim();
-                }
+            // Robust JSON block extraction
+            if (json.contains("{") && json.contains("}")) {
+                json = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1).trim();
             }
 
-            return objectMapper.readValue(json, IncidentAnalysisResponse.class);
+            IncidentAnalysisResponse parsed = objectMapper.readValue(json, IncidentAnalysisResponse.class);
+            if (parsed == null || parsed.getSuggestedSeverity() == null
+                    || parsed.getSuggestedIncidentType() == null || parsed.getRecommendedActions() == null) {
+                return createFallbackResponse(description);
+            }
+            return parsed;
         } catch (Exception e) {
-            log.warn("Không thể parse trực tiếp JSON từ AI response, áp dụng fallback phân tích cơ bản: {}", e.getMessage());
+            log.warn("Không thể parse trực tiếp JSON từ AI response, áp dụng fallback phân tích lâm sàng: {}", e.getMessage());
             return createFallbackResponse(description);
         }
     }
 
     private IncidentAnalysisResponse createFallbackResponse(String text) {
         String lower = text != null ? text.toLowerCase() : "";
-        String severity = "MEDIUM";
+        String severity = "REVIEW_REQUIRED";
         String type = "OTHER";
         List<String> actions = new ArrayList<>();
 
-        if (lower.contains("bất tỉnh") || lower.contains("ngưng thở") || lower.contains("cấp cứu") || lower.contains("nguy kịch")) {
+        if (lower.contains("bất tỉnh") || lower.contains("ngưng thở") || lower.contains("cấp cứu")
+                || lower.contains("nguy kịch") || lower.contains("sặc") || lower.contains("choking")) {
             severity = "EMERGENCY";
             type = "MEDICAL_EMERGENCY";
-            actions.add("Gọi ngay cấp cứu 115 / ER");
-            actions.add("Thông báo Bác sĩ trực và Giám đốc điều dưỡng (DON)");
+        } else if (lower.contains("đập đầu") || lower.contains("chấn thương đầu") || lower.contains("head strike")
+                || lower.contains("gãy xương") || lower.contains("fracture")) {
+            severity = "CRITICAL";
+            type = "INJURY";
         } else if (lower.contains("ngã") || lower.contains("té") || lower.contains("fall")) {
             severity = "HIGH";
             type = "FALL";
-            actions.add("Kiểm tra chấn thương đầu và khớp của cư dân");
-            actions.add("Đo lại chỉ số sinh tồn (vitals) ngay lập tức");
-            actions.add("Báo cáo cho Y tá trưởng và gia đình");
-        } else if (lower.contains("thuốc") || lower.contains("medication")) {
+        } else if (lower.contains("thuốc") || lower.contains("medication") || lower.contains("quá liều") || lower.contains("nhầm liều")) {
             severity = "HIGH";
             type = "MEDICATION_ERROR";
-            actions.add("Kiểm tra lại hồ sơ eMAR và đơn thuốc");
-            actions.add("Theo dõi dấu hiệu phản ứng thuốc trong 4 giờ tới");
-        } else if (lower.contains("đi lạc") || lower.contains("trốn") || lower.contains("elopement")) {
+        } else if (lower.contains("đi lạc") || lower.contains("trốn") || lower.contains("elopement") || lower.contains("mất tích")) {
             severity = "CRITICAL";
             type = "ELOPEMENT";
-            actions.add("Kích hoạt quy trình tìm kiếm khẩn cấp trong toàn viện");
-            actions.add("Kiểm tra camera an ninh và báo cho bảo vệ các cổng");
-        } else {
-            actions.add("Theo dõi tình trạng cư dân và ghi nhận diễn biến tiếp theo");
+        } else if (lower.contains("kích động") || lower.contains("đánh") || lower.contains("bạo lực") || lower.contains("combative")) {
+            severity = "HIGH";
+            type = "BEHAVIORAL";
         }
+        actions.add("Bảo đảm an toàn trước mắt và kích hoạt quy trình xử lý sự cố đã được cơ sở phê duyệt.");
+        actions.add("Liên hệ điều dưỡng/bác sĩ phụ trách để xác nhận mức độ và bước xử lý.");
+        actions.add("Ghi nhận dữ kiện quan sát được, thời gian và người đã thông báo.");
 
         return IncidentAnalysisResponse.builder()
                 .suggestedSeverity(severity)
                 .suggestedIncidentType(type)
-                .rationale("Phân tích dựa trên các từ khóa an toàn lâm sàng từ mô tả sự cố.")
+                .rationale("Gợi ý dựa trên từ khóa khi AI không khả dụng; nhân viên phải xác nhận mức độ và loại sự cố.")
                 .recommendedActions(actions)
-                .confidence(0.80)
+                .confidence("OTHER".equals(type) ? 0.0 : 0.3)
                 .build();
     }
 }

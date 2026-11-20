@@ -25,6 +25,7 @@ export const getAdmissions = async (params: AdmissionListParams) => {
 export const getActiveAdmissions = async () => {
   const { data } = await axiosInstance.get<ApiResponse<AdmissionSelectDTO[]>>(
     `${BASE_URL}/select-active`,
+    { timeout: 15000 },
   );
   return data;
 };

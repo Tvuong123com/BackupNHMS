@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import type { GetCarePlanListResponse } from "@/services/care-plan/care-plan-types";
 import { Loader2, AlertCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AiSuggestCarePlanModal } from "@/features/admin/ai/components/ai-suggest-careplan-modal";
 
 const CarePlanPage = () => {
   const [loading, setLoading] = useState(true);
@@ -66,9 +65,6 @@ const CarePlanPage = () => {
           <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">
             {carePlanResponse?.data?.list?.length || 0} care plans · sorted by Date Added (newest first)
           </p>
-        </div>
-        <div className="shrink-0">
-          <AiSuggestCarePlanModal />
         </div>
       </div>
 

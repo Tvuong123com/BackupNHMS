@@ -33,9 +33,16 @@ import java.util.List;
 @RequestMapping("/api/v1/care-plans")
 public class CarePlanController {
     private final ICarePlanService carePlanService;
+    private final com.eldercare.modules.careplan_management.careplan_design.service.CarePlanCreationService creationService;
 
-    public CarePlanController(ICarePlanService carePlanService) {
+    public CarePlanController(ICarePlanService carePlanService, com.eldercare.modules.careplan_management.careplan_design.service.CarePlanCreationService creationService) {
         this.carePlanService = carePlanService;
+        this.creationService = creationService;
+    }
+
+    @GetMapping("/residents")
+    public List<com.eldercare.modules.careplan_management.careplan_design.service.CarePlanCreationService.ResidentOption> residents() {
+        return creationService.residents();
     }
 
     @PatchMapping("/{carePlanId}/activate")
@@ -114,10 +121,10 @@ public class CarePlanController {
     @PostMapping("")
     public ResponseEntity<ApiResponse<CreateCarePlanResponseDTO>> createCarePlan(
             @RequestBody() CreateCarePlanRequestDTO requestDTO,
-            @RequestParam(defaultValue = "DRAFT") String purpose) {
+            @RequestParam(defaultValue = "DRAFT") String purpose, org.springframework.security.core.Authentication authentication) {
 
         ApiResponse<CreateCarePlanResponseDTO> response = ApiResponse
-                .success(this.carePlanService.createCarePlan(requestDTO, purpose));
+                .success(this.creationService.create(requestDTO, purpose, authentication.getName()));
         return ResponseEntity.ok(response);
     }
 

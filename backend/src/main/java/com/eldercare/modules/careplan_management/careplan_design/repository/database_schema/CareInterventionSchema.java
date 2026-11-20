@@ -31,7 +31,8 @@ public class CareInterventionSchema {
     @Column(name = "assigned_role", nullable = false)
     private String assignedRole;
 
-    @Column(name = "title")
+    @org.hibernate.annotations.Nationalized
+    @Column(name = "title", length = 2000)
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)

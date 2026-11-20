@@ -1,6 +1,8 @@
 import { Search } from "lucide-react";
+import type { Role } from "@/features/admin/roles/types/role.type";
 
 interface SearchFilterProps {
+  roles: Role[];
   search: string;
   role: string;
   status: string;
@@ -14,6 +16,7 @@ interface SearchFilterProps {
 }
 
 export function SearchFilter({
+  roles,
   search,
   role,
   status,
@@ -47,12 +50,9 @@ export function SearchFilter({
           className="rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-blue-500"
         >
           <option value="ALL">Role: All</option>
-          <option value="1">System Admin</option>
-          <option value="2">Admission</option>
-          <option value="3">DON</option>
-          <option value="4">Nurse</option>
-          <option value="5">CNA</option>
-          <option value="6">Billing</option>
+          {roles.map((item) => (
+            <option key={item.id} value={String(item.id)}>{item.roleName}</option>
+          ))}
         </select>
 
         <select
@@ -62,6 +62,7 @@ export function SearchFilter({
         >
           <option value="ALL">Status: All</option>
           <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
           <option value="INVITED">Invited</option>
           <option value="SUSPENDED">Suspended</option>
           <option value="DEACTIVATED">Deactivated</option>

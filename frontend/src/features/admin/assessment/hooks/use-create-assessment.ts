@@ -11,6 +11,7 @@ export const useCreateAssessment = () => {
     mutationFn: createAssessment,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["admissions"] });
       toast.success(data.message ?? "Created successfully");
     },
     onError: (error: AxiosError<ApiResponse<null>>) => {

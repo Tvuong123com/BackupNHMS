@@ -5,4 +5,5 @@ export const useActiveAdmissions = () =>
   useQuery({
     queryKey: ["admissions", "select-active"],
     queryFn: getActiveAdmissions,
+    retry: false,
   });

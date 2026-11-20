@@ -22,7 +22,7 @@ export const DataTablePagination = <TData,>({
   return (
     <div className="flex items-center justify-between px-2">
       <div className="flex items-center space-x-2">
-        <p className="text-sm font-medium">Số dòng/trang</p>
+        <p className="text-sm font-medium">Rows per page</p>
         <Select
           value={`${table.getState().pagination.pageSize}`}
           onValueChange={(v) => table.setPageSize(Number(v))}

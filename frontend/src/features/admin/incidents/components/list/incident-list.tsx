@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { AlarmClock, Clock, FileCheck2, Layers } from "lucide-react";
 import { CardSummary, FilterDropdown, IncidentsTable, Pagination } from ".";
@@ -28,6 +29,7 @@ const chartStyles: Record<string, string> = {
 const PAGE_SIZE = 20;
 
 export function IncidentList() {
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<ReturnType<typeof toIncidentRow>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,12 @@ export function IncidentList() {
             <h1 className="text-3xl font-bold text-slate-900">Incidents</h1>
             <p className="mt-1 text-sm text-slate-500">{totalItems} incidents this month</p>
           </div>
-          <Button className="rounded-full bg-blue-600 px-5 py-3 text-white hover:bg-blue-700">+ Report Incident</Button>
+          <Button
+            onClick={() => navigate("/admin/incidents?tab=report")}
+            className="rounded-full bg-blue-600 px-5 py-3 text-white hover:bg-blue-700 cursor-pointer shadow-xs"
+          >
+            + Report Incident
+          </Button>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">

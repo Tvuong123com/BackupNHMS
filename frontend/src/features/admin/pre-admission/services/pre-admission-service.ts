@@ -29,6 +29,7 @@ export const getScreenings = async (params: ScreeningListParams) => {
 export const getCompletedScreenings = async () => {
   const { data } = await axiosInstance.get<ApiResponse<PreSelectDTO[]>>(
     `${BASE_URL}/select-completed`,
+    { timeout: 15000 },
   );
 
   return data;

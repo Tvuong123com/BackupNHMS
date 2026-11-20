@@ -7,8 +7,18 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Query;
+import java.util.List;
+import java.time.OffsetDateTime;
+import org.springframework.data.repository.query.Param;
 
 public interface IncidentRepository extends JpaRepository<IncidentEntity, Long> {
+    List<IncidentEntity> findTop5ByResidentIdOrderByOccurredAtDesc(Long residentId);
+
+    @Query("SELECT i FROM IncidentEntity i JOIN FETCH i.resident r WHERE i.occurredAt >= :since")
+    List<IncidentEntity> findRecentWithResident(@Param("since") OffsetDateTime since);
+
+    @Query("SELECT i FROM IncidentEntity i JOIN FETCH i.resident WHERE i.occurredAt BETWEEN :start AND :end")
+    List<IncidentEntity> findForShift(@Param("start") OffsetDateTime start, @Param("end") OffsetDateTime end);
 
     @Query(value = "SELECT i FROM IncidentEntity i LEFT JOIN FETCH i.resident r LEFT JOIN FETCH r.bed b LEFT JOIN FETCH b.room rm LEFT JOIN FETCH i.severity s",
            countQuery = "SELECT COUNT(i) FROM IncidentEntity i")

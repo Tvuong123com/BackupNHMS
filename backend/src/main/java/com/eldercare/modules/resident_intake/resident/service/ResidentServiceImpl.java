@@ -662,7 +662,7 @@ public class ResidentServiceImpl implements ResidentService {
 
     @Override
     public List<ResidentPendingDTO> getPendingResidents() {
-        return residentRepository.findByStatus("PENDING").stream().map(r -> {
+        return residentRepository.findEligibleForScreening().stream().map(r -> {
             ResidentPendingDTO dto = new ResidentPendingDTO();
             dto.setId(r.getId());
             dto.setFullName(r.getFirstName() + " " + r.getLastName());

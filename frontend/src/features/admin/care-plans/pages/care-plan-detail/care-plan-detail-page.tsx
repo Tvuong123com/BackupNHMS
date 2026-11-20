@@ -1,146 +1,68 @@
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { GoalTab } from "../tabs/goal-tab";
-// import { InterventionTab } from "../tabs/intervention-tab";
-
-import { useParams, useResolvedPath } from "react-router";
+import { Link, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import CarePlanNavBar from "../../components/care-plan-detail/care-plan-detail-tabs";
-import CarePlanDetailTitle from "../../components/care-plan-detail/care-plan-detail-title";
-import Flag from "../../ui/flag";
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import type { CarePlanDetail } from "@/services/care-plan/care-plan-types";
 import { getCarePlanDetail } from "@/services/care-plan/care-plan-services";
-import { useEffect, useState } from "react";
+import { AiSuggestCarePlanModal } from "@/features/admin/ai/components/ai-suggest-careplan-modal";
+import type { SuggestedGoal } from "@/features/admin/ai/types/ai.types";
+import { apiClient } from "@/lib/api-client";
+import { apiErrorMessage } from "@/components/common/lookup-select";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { isClinicalReviewer } from "@/features/auth/role-permissions";
 
-// /*Deprecated*/
-
-// const CarePlanDetailPage = () => {
-//   return (
-//     <Tabs defaultValue="goals">
-//       <TabsList className={"w-full"}>
-//         <TabsTrigger value="goals">Goals</TabsTrigger>
-//         <TabsTrigger value="interventions">Interventions</TabsTrigger>
-//       </TabsList>
-//       <TabsContent value="goals">
-//         <GoalTab />
-//       </TabsContent>
-//       <TabsContent value="interventions">
-//         <InterventionTab />
-//       </TabsContent>
-//     </Tabs>
-//   );
-// };
-
-// export default CarePlanDetailPage;
-
-// type CarePlanDetailProps = {
-//   id?: string;
-//   residentName?: string;
-//   status?: string;
-//   room?: string;
-//   locTier?: string;
-//   nextReview?: string;
-// };
 export default function CarePlanDetailPage() {
   const { id } = useParams();
-
-  const [carePlan, setCarePlan] = useState<CarePlanDetail | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-
-    loadCarePlan(Number(id));
-  }, [id]);
-
-  const loadCarePlan = async (id: number) => {
-    try {
-      const response = await getCarePlanDetail(id);
-      setCarePlan(response.data);
-    } catch (error) {
-      console.error(error);
-    }
+  const planId = Number(id);
+  const validId = Number.isSafeInteger(planId) && planId > 0;
+  const { data: user } = useCurrentUser();
+  const query = useQuery({ queryKey: ["care-plan", planId], queryFn: async () => (await getCarePlanDetail(planId)).data, enabled: validId, retry: false });
+  const carePlan = query.data;
+  const applySuggestedGoals = async (goals: SuggestedGoal[]) => {
+    await apiClient.post(`/care-plans/${planId}/goals/batch`, goals.map(goal => ({
+      careGoalName: goal.goalName || "Care Goal",
+      careGoalDescription: goal.description || goal.goalName || "Evidence-based clinical care objective",
+      interventions: (goal.interventions || []).map(item => ({
+        title: item.name || "Actionable nursing intervention",
+        assignedRole: item.assignedRole || "NURSE",
+      })),
+    })));
+    await query.refetch();
   };
-  if (!carePlan) {
-    return <div>is loading...</div>;
-  }
-
-  return (
-    <div>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/care-plans">
-              Care Planning
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/admin/care-plans/${carePlan.resident.id}`}>
-              Detail
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/admin/care-plans/${carePlan.resident.id}`}>
-              {carePlan.resident.fullname}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex items-center">
-        <div className="mr-[16px] flex flex-row items-center gap-4">
-          <div className="w-20 h-20 rounded-lg border-2 border-gray-400 overflow-hidden">
-            <img
-              src="https://placehold.co/80x80"
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <CarePlanDetailTitle
-              residentName={carePlan.resident.fullname}
-            ></CarePlanDetailTitle>
-            <div>{`DOB ${carePlan.resident.dateOfBirth} . Room ${carePlan.definition.room}${carePlan.definition.bed} . Resident ID ${carePlan.resident.id}`}</div>
-            <div className="flex flex-row gap-4 mt-[6px]">
-              <Flag
-                title={carePlan.status}
-                className={`rounded-full ${
-                  status === "Needs Update"
-                    ? "bg-red-300 text-red-700 border-red-400"
-                    : "bg-green-300 text-green-700 border-green-400"
-                }`}
-              ></Flag>
-              <Flag
-                title={`Level ${carePlan.locTier.toString()}`}
-                className={`rounded-full ${
-                  status === "Needs Update"
-                    ? "bg-red-300 text-red-700 border-red-400"
-                    : "bg-green-300 text-green-700 border-green-400"
-                }`}
-              ></Flag>
-            </div>
-          </div>
+  if (!validId) return <p role="alert">Invalid care plan ID. <Link to="/admin/care-plans" className="underline">Back to Care Plans</Link></p>;
+  if (query.isPending) return <p role="status">Loading care plan…</p>;
+  if (query.isError || !carePlan) return <div role="alert" className="space-y-3"><p>{apiErrorMessage(query.error, "Could not load this care plan.")}</p><button className="underline" onClick={() => void query.refetch()}>Retry care plan</button><Link className="block underline" to="/admin/care-plans">Back to Care Plans</Link></div>;
+  const needsUpdate = String(carePlan.status).toUpperCase().replaceAll(" ", "_") === "NEEDS_UPDATE";
+  return <div className="space-y-5">
+    <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground"><Link to="/admin/care-plans" className="text-blue-600 underline">Care Plans</Link> / Care Plan #{carePlan.id} / <Link to={`/admin/residents/${carePlan.resident.id}`} className="text-blue-600 underline">{carePlan.resident.fullname}</Link></nav>
+    <div className="rounded-xl border p-5 space-y-3 bg-white dark:bg-zinc-900 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Care Plan Detail · {carePlan.resident.fullname}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Resident #{carePlan.resident.id} · DOB {carePlan.resident.dateOfBirth || "Not recorded"} · Room {carePlan.definition?.room || "Not assigned"} · Bed {carePlan.definition?.bed || "Not assigned"}</p>
+        </div>
+        <div className="shrink-0">
+          <AiSuggestCarePlanModal
+            key={carePlan.id}
+            residentId={carePlan.resident.id}
+            residentName={carePlan.resident.fullname}
+            careLevel={carePlan.locTier > 0 ? `Level ${carePlan.locTier}` : undefined}
+            onApplyGoals={applySuggestedGoals}
+          />
         </div>
       </div>
-      {/* <div className=" text-gray-600">
-        {`Room ${room ?? "204B"} . LOC Tier ${locTier ?? "3"} . Next review ${nextReview ?? "2026-07-07"}`}
-      </div> */}
-
-      <div className="tab mt-4">
-        <CarePlanNavBar
-          listCareGoals={carePlan.goals}
-          cycle={carePlan.cycle}
-          lastReview={carePlan.lastReviewedDateTime ?? "null"}
-          nextReview={carePlan.nextReviewDateTime ?? "null"}
-        ></CarePlanNavBar>
+      <div className="flex gap-2 flex-wrap items-center pt-1 border-t border-slate-100 dark:border-zinc-800">
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${needsUpdate ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>{carePlan.status}</span>
+        <span className="rounded-full border px-3 py-1 text-xs font-medium">{carePlan.locTier > 0 ? `LOC Tier ${carePlan.locTier}` : "LOC not recorded"}</span>
+        <span className="text-xs text-muted-foreground ml-auto">Created by {carePlan.createdBy?.fullname || "Clinical Coordinator"} · {carePlan.createdAt ? new Date(carePlan.createdAt).toLocaleString() : "Active Record"}</span>
       </div>
     </div>
-  );
+    <CarePlanNavBar
+      listCareGoals={carePlan.goals ?? []}
+      cycle={carePlan.cycle}
+      lastReview={carePlan.lastReviewedDateTime ?? "null"}
+      nextReview={carePlan.nextReviewDateTime ?? "null"}
+      locTier={carePlan.locTier}
+      status={carePlan.status}
+      createdAt={carePlan.createdAt}
+    />
+  </div>;
 }

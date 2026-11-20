@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class AiChatRequest {
     private String message;
     private String context;
+    private String conversationId;
 }

@@ -103,11 +103,9 @@ export const getScreeningColumns = ({
         }
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 hover:bg-gray-100">
+            <DropdownMenuTrigger className="inline-flex h-8 items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-sm hover:bg-gray-100">
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="ml-1 text-xs font-semibold">Action</span>
-              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem

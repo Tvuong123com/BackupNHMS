@@ -4,5 +4,10 @@ public enum IncidentType {
     FALL,
     MEDICATION_ERROR,
     ALTERCATION,
-    SKIN_TEAR
+    SKIN_TEAR,
+    ELOPEMENT,
+    BEHAVIORAL,
+    MEDICAL_EMERGENCY,
+    INJURY,
+    OTHER
 }

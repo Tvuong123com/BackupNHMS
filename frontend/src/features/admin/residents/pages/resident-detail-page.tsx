@@ -6,15 +6,19 @@ import { InfoTab } from "../tabs/info-tab";
 import { CareLevelHistoryTab } from "../tabs/care-level-history";
 import { SensitiveInfoTab } from "../tabs/sensitive-info";
 import { PERMISSIONS } from "@/common/permissions";
-import { usePermissions } from "@/features/auth/hooks/use-current-user";
+import { useCurrentUser, usePermissions } from "@/features/auth/hooks/use-current-user";
+import { isClinicalReviewer } from "@/features/auth/role-permissions";
 import { residentService, type ResidentInfo } from "@/services/resident/residentService";
 import ResidentContactsTab from "../tabs/resident-contacts-tab";
 import LocResultTab from "../tabs/loc-result-tab";
+import { AiResidentReview } from "@/features/admin/ai/components/ai-resident-review";
 
 const ResidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { can } = usePermissions();
+  const { data: currentUser } = useCurrentUser();
+  const clinicalReviewer = currentUser ? isClinicalReviewer(currentUser.roleName) : false;
   const residentId = Number(id);
   const [resident, setResident] = useState<ResidentInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,9 +74,16 @@ const ResidentDetailPage = () => {
       permission: PERMISSIONS.RESIDENT_SENSITIVE_VIEW,
       content: <SensitiveInfoTab residentId={id || ""} />,
     },
+    {
+      value: "ai-review",
+      label: "AI Review",
+      permission: PERMISSIONS.RESIDENT_VIEW,
+      content: <AiResidentReview residentId={residentId} />,
+    },
   ];
 
-  const visibleTabs = tabs.filter((t) => can(t.permission));
+  const visibleTabs = tabs.filter((t) => can(t.permission)
+    && (t.value !== "ai-review" || clinicalReviewer));
 
   if (loading) {
     return (

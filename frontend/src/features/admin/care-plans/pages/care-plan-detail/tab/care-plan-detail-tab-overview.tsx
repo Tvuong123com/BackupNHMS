@@ -39,7 +39,7 @@ export default function CarePlanDetailTabOverview({
                 className="rounded-[6px] border-gray-200 bg-white border-2 p-[8px] mb-[16px]"
               >
                 <div className="flex justify-between">
-                  <p className="text-lg font-bold">{goal.title}</p>
+                  <p className="text-lg font-bold">{goal.title || `Goal #${goal.id} · Title not recorded`}</p>
 
                   <Flag title={goal.status} />
                 </div>
@@ -47,7 +47,7 @@ export default function CarePlanDetailTabOverview({
                 <div className="mt-2 text-gray-600">
                   <p>
                     <span className="font-medium">Goal:</span>{" "}
-                    {goal.goalDescription}
+                    {goal.goalDescription || "Description not recorded"}
                   </p>
                 </div>
 
@@ -61,7 +61,7 @@ export default function CarePlanDetailTabOverview({
                           key={intervention.id}
                           className="rounded bg-gray-50 p-2"
                         >
-                          <p>{intervention.title}</p>
+                          <p>{intervention.title || `Intervention #${intervention.id} · Content not recorded`}</p>
 
                           <p className="text-sm text-gray-500">
                             Assigned Role: {intervention.assignedRole}
@@ -75,7 +75,7 @@ export default function CarePlanDetailTabOverview({
             ))}
           </div>
           <div className="activityTimeLineList">
-            <p>Activity (Care Activity Timeline)</p>
+            <p>Example Activity Timeline · Demonstration entries, not this resident's chart records</p>
 
             <div className="mt-[16px]">
               <Timeline className="w-full">
@@ -155,7 +155,7 @@ export default function CarePlanDetailTabOverview({
         <div>
           <div className="flex flex-col ">
             <div className="rounded-[6px] border-gray-200 bg-white border-2 p-[8px] mb-[16px]">
-              <p className="text-lg font-bold">Cost Estimate</p>
+              <p className="text-lg font-bold">Example Costs · Not resident billing</p>
               <div className=" flex flex-row justify-between">
                 <p>Loc rate (Tier 3)</p>
                 <p className="font-bold">$234.77 / day</p>

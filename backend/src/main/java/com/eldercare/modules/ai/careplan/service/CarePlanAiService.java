@@ -3,13 +3,18 @@ package com.eldercare.modules.ai.careplan.service;
 import com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionRequest;
 import com.eldercare.modules.ai.careplan.dto.CarePlanSuggestionResponse;
 import com.eldercare.modules.ai.engine.AiExecutionService;
+import com.eldercare.modules.resident_intake.resident.repository.ResidentRepository;
+import com.eldercare.modules.resident_intake.assessment.repository.AssessmentRepository;
+import com.eldercare.modules.resident_intake.resident.repository.ClinicalRecordRepository;
+import com.eldercare.modules.risk_incident.incident_tracking.repository.IncidentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.Period;
 
 @Service
 @Slf4j
@@ -18,23 +23,30 @@ public class CarePlanAiService {
 
     private final AiExecutionService aiExecutionService;
     private final ObjectMapper objectMapper;
+    private final ResidentRepository residentRepository;
+    private final AssessmentRepository assessmentRepository;
+    private final IncidentRepository incidentRepository;
+    private final ClinicalRecordRepository clinicalRecordRepository;
 
     private static final String CARE_PLAN_SYSTEM_PROMPT = """
-            Bạn là Chuyên gia Lập Kế hoạch Chăm sóc Y tế (Clinical Nurse Specialist & Care Plan Coordinator) trong viện dưỡng lão.
-            Dựa trên thông tin đánh giá (Assessment), điểm ADL, chẩn đoán bệnh và lịch sử sự cố của cư dân, hãy thiết lập các mục tiêu chăm sóc (Care Goals) và biện pháp can thiệp (Interventions) tương ứng.
+            You are a Clinical Nurse Specialist & Care Plan Coordinator in an elderly nursing care facility.
+            Based on the resident's assessment data, ADL score, medical diagnoses, and recent incident history, generate personalized, evidence-based Care Goals and corresponding Interventions in English.
+            Rely strictly on provided facts; do not invent unverified diagnoses or medication dosages.
+            The output is a draft for clinical staff to review, customize, and approve.
+            Suggest 3 to 6 comprehensive goals, assigning roles strictly from: CNA, NURSE, PT, OT, DOCTOR.
             
-            Trả về DUY NHẤT một chuỗi JSON hợp lệ theo định dạng sau (không kèm văn bản ngoài):
+            Return ONLY a valid JSON object matching this schema (no outside conversational prose):
             {
-              "residentSummary": "Tóm tắt ngắn gọn tình trạng thể chất và nhận thức của cư dân",
+              "residentSummary": "Brief clinical synthesis of the resident's physical, cognitive, and risk status",
               "suggestedGoals": [
                 {
-                  "goalName": "Tên mục tiêu chăm sóc (VD: Chương trình Phòng ngừa Té ngã)",
-                  "description": "Mô tả chi tiết mục tiêu cần đạt được",
+                  "goalName": "Concise Goal Title (e.g. Fall Risk Reduction & Bed Safety Protocol)",
+                  "description": "Specific measurable clinical objective to be achieved",
                   "priority": "HIGH | MEDIUM | LOW",
-                  "rationale": "Lý do lâm sàng đề xuất mục tiêu này",
+                  "rationale": "Clinical rationale based on resident chart data and risk indicators",
                   "interventions": [
                     {
-                      "name": "Nội dung biện pháp can thiệp cụ thể",
+                      "name": "Specific actionable nursing intervention",
                       "assignedRole": "CNA | NURSE | PT | OT | DOCTOR"
                     }
                   ]
@@ -43,18 +55,40 @@ public class CarePlanAiService {
             }
             """;
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public CarePlanSuggestionResponse suggestCarePlan(CarePlanSuggestionRequest request) {
+        if (request.getResidentId() == null) {
+            throw new IllegalArgumentException("A resident ID is required for clinical suggestions");
+        }
+        var resident = residentRepository.findByIdAndIsDeletedFalse(request.getResidentId())
+                .orElseThrow(() -> new IllegalArgumentException("Resident not found"));
         try {
+            request.setResidentName(resident.getFirstName() + " " + resident.getLastName());
+            request.setGender(resident.getGender());
+            request.setAge(resident.getDateOfBirth() == null ? null
+                    : Period.between(resident.getDateOfBirth(), LocalDate.now()).getYears());
+            assessmentRepository.findByResidentIdAndIsCurrentTrue(request.getResidentId())
+                    .ifPresent(a -> {
+                        request.setAdlScore(a.getAdlTotalScore());
+                        if (a.getConfirmedCareLevel() != null) {
+                            request.setCareLevel(a.getConfirmedCareLevel().getLevelName());
+                        }
+                    });
+            request.setRecentIncidents(incidentRepository.findTop5ByResidentIdOrderByOccurredAtDesc(request.getResidentId())
+                    .stream().map(i -> i.getIncidentType() + ": " + i.getDescription()).toList());
+            request.setDiagnoses(clinicalRecordRepository
+                    .findByResidentIdAndRecordTypeAndIsDeletedFalse(request.getResidentId(), "DIAGNOSIS")
+                    .stream().map(d -> d.getDescription()).toList());
             StringBuilder prompt = new StringBuilder();
             prompt.append("Hồ sơ cư dân: ").append(request.getResidentName() != null ? request.getResidentName() : "Cư dân")
-                    .append(", ").append(request.getAge() != null ? request.getAge() : 80).append(" tuổi")
+                    .append(", ").append(request.getAge() != null ? request.getAge() : "chưa rõ tuổi").append(" tuổi")
                     .append(", Giới tính: ").append(request.getGender() != null ? request.getGender() : "Chưa rõ").append("\n");
 
             if (request.getCareLevel() != null) {
                 prompt.append("Cấp độ chăm sóc (Care Level): ").append(request.getCareLevel()).append("\n");
             }
             if (request.getAdlScore() != null) {
-                prompt.append("Điểm đánh giá sinh hoạt (ADL Total Score): ").append(request.getAdlScore()).append("/28\n");
+                prompt.append("Điểm ADL được ghi nhận trong hồ sơ: ").append(request.getAdlScore()).append("\n");
             }
             if (request.getDiagnoses() != null && !request.getDiagnoses().isEmpty()) {
                 prompt.append("Chẩn đoán bệnh lý nền: ").append(String.join(", ", request.getDiagnoses())).append("\n");
@@ -68,10 +102,9 @@ public class CarePlanAiService {
 
             String raw = aiExecutionService.execute(CARE_PLAN_SYSTEM_PROMPT, prompt.toString());
 
-            log.info("AI Care Plan suggestion raw response: {}", raw);
             return parseCarePlanResponse(raw, request);
         } catch (Exception e) {
-            log.error("Lỗi khi gợi ý kế hoạch chăm sóc AI: {}", e.getMessage(), e);
+            log.warn("Không tạo được gợi ý kế hoạch chăm sóc AI: {}", e.getClass().getSimpleName());
             return createFallbackCarePlan(request);
         }
     }
@@ -79,79 +112,116 @@ public class CarePlanAiService {
     private CarePlanSuggestionResponse parseCarePlanResponse(String raw, CarePlanSuggestionRequest request) {
         try {
             String json = raw.trim();
-            if (json.contains("```json")) {
-                int start = json.indexOf("```json") + 7;
-                int end = json.indexOf("```", start);
-                if (end > start) json = json.substring(start, end).trim();
-            } else if (json.contains("```")) {
-                int start = json.indexOf("```") + 3;
-                int end = json.indexOf("```", start);
-                if (end > start) json = json.substring(start, end).trim();
+            if (json.contains("{") && json.contains("}")) {
+                json = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1).trim();
             }
 
-            return objectMapper.readValue(json, CarePlanSuggestionResponse.class);
+            CarePlanSuggestionResponse parsed = objectMapper.readValue(json, CarePlanSuggestionResponse.class);
+            if (parsed == null || parsed.getSuggestedGoals() == null
+                    || parsed.getSuggestedGoals().stream().anyMatch(goal -> goal == null
+                            || goal.getGoalName() == null || goal.getGoalName().isBlank()
+                            || goal.getDescription() == null || goal.getDescription().isBlank()
+                            || goal.getGoalName().length() > 255 || goal.getDescription().length() > 10000
+                            || goal.getInterventions() == null || goal.getInterventions().isEmpty()
+                            || goal.getInterventions().stream().anyMatch(item -> item == null || item.getName() == null
+                                || item.getName().isBlank() || item.getName().length() > 2000 || item.getAssignedRole() == null
+                                || !java.util.Set.of("CNA", "NURSE", "PT", "OT", "DOCTOR").contains(item.getAssignedRole())))) {
+                return createFallbackCarePlan(request);
+            }
+            if (parsed.getSuggestedGoals().size() > 10) parsed.setSuggestedGoals(parsed.getSuggestedGoals().subList(0, 10));
+            parsed.setGenerationMethod("AI");
+            return parsed;
         } catch (Exception e) {
-            log.warn("Không thể parse trực tiếp JSON Care Plan từ AI, kích hoạt fallback thông minh: {}", e.getMessage());
+            log.warn("Không thể parse JSON Care Plan từ AI: {}", e.getMessage());
             return createFallbackCarePlan(request);
         }
     }
 
     private CarePlanSuggestionResponse createFallbackCarePlan(CarePlanSuggestionRequest request) {
-        List<CarePlanSuggestionResponse.SuggestedGoalDTO> goals = new ArrayList<>();
+        String name = request.getResidentName() != null ? request.getResidentName() : "Resident";
+        List<CarePlanSuggestionResponse.SuggestedGoalDTO> fallbackGoals = new java.util.ArrayList<>();
 
-        // Fall Risk Goal nếu có tiền sử ngã hoặc điểm ADL cao
-        boolean hasFallHistory = request.getRecentIncidents() != null &&
-                request.getRecentIncidents().stream().anyMatch(i -> i.toLowerCase().contains("ngã") || i.toLowerCase().contains("fall"));
-
-        if (hasFallHistory || (request.getAdlScore() != null && request.getAdlScore() >= 18)) {
-            List<CarePlanSuggestionResponse.SuggestedInterventionDTO> fallInterventions = new ArrayList<>();
-            fallInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Lắp thanh vịn an toàn tại phòng tắm và cạnh giường", "CNA"));
-            fallInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Hỗ trợ cư dân di chuyển và đi vệ sinh vào ban đêm", "CNA"));
-            fallInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Đánh giá lại thăng bằng và chỉ định bài tập vật lý trị liệu 3 buổi/tuần", "PT"));
-
-            goals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
-                    .goalName("Chương trình Phòng ngừa Té ngã Cá nhân hóa")
-                    .description("Giảm thiểu tối đa nguy cơ té ngã khi di chuyển trong phòng và sinh hoạt hàng ngày.")
-                    .priority("HIGH")
-                    .rationale("Cư dân có tiền sử té ngã hoặc suy giảm thăng bằng vận động.")
-                    .interventions(fallInterventions)
-                    .build());
-        }
-
-        // Memory Care Goal
-        boolean isMemoryCare = (request.getCareLevel() != null && request.getCareLevel().toLowerCase().contains("memory")) ||
-                (request.getDiagnoses() != null && request.getDiagnoses().stream().anyMatch(d -> d.toLowerCase().contains("dementia") || d.toLowerCase().contains("alzheimer") || d.toLowerCase().contains("sa sút")));
-
-        if (isMemoryCare) {
-            List<CarePlanSuggestionResponse.SuggestedInterventionDTO> memoryInterventions = new ArrayList<>();
-            memoryInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Kiểm tra vị trí và giám sát phòng tránh đi lạc mỗi 30-45 phút", "CNA"));
-            memoryInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Tổ chức hoạt động gợi nhớ ký ức (Reminiscence Therapy) 2 lần/tuần", "OT"));
-
-            goals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
-                    .goalName("Hỗ trợ Trí nhớ và An toàn Định hướng")
-                    .description("Duy trì sự ổn định tâm lý, định hướng không gian và ngăn ngừa hành vi đi lạc.")
-                    .priority("HIGH")
-                    .rationale("Cư dân có triệu chứng sa sút trí tuệ / Alzheimer cần giám sát tăng cường.")
-                    .interventions(memoryInterventions)
-                    .build());
-        }
-
-        // General Health & Medication Management Goal
-        List<CarePlanSuggestionResponse.SuggestedInterventionDTO> medInterventions = new ArrayList<>();
-        medInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Đo huyết áp và mạch 2 lần mỗi ngày (sáng/chiều)", "NURSE"));
-        medInterventions.add(new CarePlanSuggestionResponse.SuggestedInterventionDTO("Cấp phát và giám sát uống thuốc theo đúng lịch eMAR", "NURSE"));
-
-        goals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
-                .goalName("Quản lý Bệnh mạn tính & Tuân thủ Dược phẩm")
-                .description("Theo dõi sát các chỉ số sinh tồn và đảm bảo uống thuốc đúng giờ, đúng liều lượng.")
-                .priority("MEDIUM")
-                .rationale("Cư dân cao tuổi cần duy trì huyết áp và chỉ số sinh tồn ổn định.")
-                .interventions(medInterventions)
+        // Goal 1: Fall Safety
+        fallbackGoals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
+                .goalName("Fall Risk Reduction & Bedside Safety Protocol")
+                .description("Maintain resident safety in bedroom and bathroom areas with zero unassisted fall occurrences.")
+                .priority("HIGH")
+                .rationale("High-priority safety protocol based on geriatric fall prevention guidelines (CDC STEADI).")
+                .interventions(List.of(
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Ensure bed is locked in lowest position with bedside floor safety mat placed.")
+                                .assignedRole("CNA").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Activate bed sensor alarm during sleep hours and test nurse call bell proximity.")
+                                .assignedRole("NURSE").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Physical therapy gait and balance assessment with assistive walker verification.")
+                                .assignedRole("PT").build()
+                ))
                 .build());
 
+        // Goal 2: ADL Independence & Toileting
+        fallbackGoals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
+                .goalName("ADL Functional Independence & Scheduled Toileting")
+                .description("Promote functional mobility and personal hygiene independence while mitigating incontinence risks.")
+                .priority("MEDIUM")
+                .rationale("Regular toileting prevents hurried unassisted transfers and promotes resident dignity.")
+                .interventions(List.of(
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Implement scheduled 2-hour daytime toileting and prompt assistance before bed.")
+                                .assignedRole("CNA").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Assist with morning/evening hygiene routines using adaptive personal care equipment.")
+                                .assignedRole("CNA").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Occupational therapy evaluation for adaptive dining and dressing aids.")
+                                .assignedRole("OT").build()
+                ))
+                .build());
+
+        // Goal 3: Medication & Clinical Surveillance
+        fallbackGoals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
+                .goalName("Medication Adherence & Hydration Surveillance")
+                .description("Ensure optimal hydration and therapeutic medication levels without adverse pharmacological events.")
+                .priority("HIGH")
+                .rationale("Elderly residents are vulnerable to dehydration, orthostatic hypotension, and polypharmacy interactions.")
+                .interventions(List.of(
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Promote fluid intake toward 1,500 mL daily target and log hydration observations.")
+                                .assignedRole("CNA").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Review medications for anticholinergic burden (ACB) and monitor blood pressure.")
+                                .assignedRole("NURSE").build(),
+                        CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                .name("Physician medication regimen review and routine laboratory surveillance.")
+                                .assignedRole("DOCTOR").build()
+                ))
+                .build());
+
+        // Goal 4 (if wandering / memory issues)
+        boolean hasMemoryRisk = (request.getCareLevel() != null && request.getCareLevel().toLowerCase().contains("memory"))
+                || (request.getRecentIncidents() != null && request.getRecentIncidents().stream().anyMatch(i -> i.toUpperCase().contains("ELOPEMENT") || i.toUpperCase().contains("WANDER")));
+        if (hasMemoryRisk) {
+            fallbackGoals.add(CarePlanSuggestionResponse.SuggestedGoalDTO.builder()
+                    .goalName("Elopement Risk Mitigation & Cognitive Engagement")
+                    .description("Maintain resident security within safe perimeter while providing stimulating, comforting activities.")
+                    .priority("HIGH")
+                    .rationale("Memory care safety protocol to mitigate wandering toward unmonitored exits.")
+                    .interventions(List.of(
+                            CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                    .name("Conduct 30-minute visual safety checks, especially during 16:00-20:00 sunsetting hours.")
+                                    .assignedRole("CNA").build(),
+                            CarePlanSuggestionResponse.SuggestedInterventionDTO.builder()
+                                    .name("Engage in structured calming sensory activities (music, tactile crafts, reminiscence).")
+                                    .assignedRole("OT").build()
+                    ))
+                    .build());
+        }
+
         return CarePlanSuggestionResponse.builder()
-                .residentSummary("Cư dân " + (request.getResidentName() != null ? request.getResidentName() : "") + " đang tiếp nhận chăm sóc theo dõi định kỳ.")
-                .suggestedGoals(goals)
+                .residentSummary("Clinical care profile for " + name + " (Age " + (request.getAge() != null ? request.getAge() : "N/A") + ", " + (request.getCareLevel() != null ? request.getCareLevel() : "Standard Care") + "). Goals compiled from evidence-based geriatric protocols.")
+                .suggestedGoals(fallbackGoals)
+                .generationMethod("CLINICAL_PROTOCOL_DRAFT")
                 .build();
     }
 }

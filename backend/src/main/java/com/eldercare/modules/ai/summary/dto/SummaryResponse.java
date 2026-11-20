@@ -17,4 +17,6 @@ public class SummaryResponse {
     private List<String> keyHighlights;
     private List<String> handoverActionItems;
     private String generatedAt;
+    private List<HandoverTypes.Suggestion> proposedActions;
+    private String generationMethod;
 }

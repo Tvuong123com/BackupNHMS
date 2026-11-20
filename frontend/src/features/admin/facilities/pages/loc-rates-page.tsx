@@ -96,10 +96,11 @@ export const LOCRatesPage = () => {
   // Mutation for update
   const saveRateMutation = useMutation({
     mutationFn: (data: { careLevelId: number; facilityId: number; dailyRate: number; effectiveFrom: string }) =>
-      careLevelApi.createCareLevelRate(data.careLevelId, {
-        facilityId: data.facilityId,
-        dailyRate: data.dailyRate,
-        effectiveFrom: data.effectiveFrom,
+      careLevelApi.createCareLevelRate({
+        care_level_id: data.careLevelId,
+        facility_id: data.facilityId,
+        daily_rate: data.dailyRate,
+        effective_from: data.effectiveFrom,
       }),
     onSuccess: () => {
       toast.success("LOC Rate updated successfully");

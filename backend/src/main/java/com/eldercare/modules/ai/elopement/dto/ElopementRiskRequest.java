@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ElopementRiskRequest {
+    private Long residentId;
     private String residentName;
     private String roomNumber;
     private Integer cognitiveScore; // Ví dụ: Mini-Mental State Examination (MMSE) / 30

@@ -50,7 +50,6 @@ public class VoiceCareAiService {
 
             String raw = aiExecutionService.execute(VOICE_PARSE_SYSTEM_PROMPT, prompt.toString());
 
-            log.info("AI Voice note parse raw response: {}", raw);
             return parseJsonResponse(raw, request);
         } catch (Exception e) {
             log.error("Lỗi khi bóc tách ghi chú giọng nói AI: {}", e.getMessage(), e);
@@ -69,6 +68,12 @@ public class VoiceCareAiService {
                 int start = json.indexOf("```") + 3;
                 int end = json.indexOf("```", start);
                 if (end > start) json = json.substring(start, end).trim();
+            }
+
+            int firstBrace = json.indexOf('{');
+            int lastBrace = json.lastIndexOf('}');
+            if (firstBrace >= 0 && lastBrace > firstBrace) {
+                json = json.substring(firstBrace, lastBrace + 1).trim();
             }
 
             return objectMapper.readValue(json, VoiceCareParseResponse.class);

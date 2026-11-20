@@ -29,10 +29,12 @@ public class CareGoalSchema {
     @Enumerated(EnumType.STRING)
     private CarePlanGoalStatusEnum status;
 
-    @Column(name = "title")
+    @org.hibernate.annotations.Nationalized
+    @Column(name = "title", length = 255)
     private String title;
 
-    @Column(name = "description")
+    @org.hibernate.annotations.Nationalized
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)

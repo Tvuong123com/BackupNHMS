@@ -4,6 +4,9 @@ import { aiService } from "../services/ai-service";
 import type { VoiceCareParseResponse } from "../types/ai.types";
 
 interface AiVoiceCareInputProps {
+  residentId: number;
+  tasks: { id: number; taskType: string; status: string }[];
+  onConfirmed?: () => void;
   expectedResidentName?: string;
   expectedRoomNumber?: string;
   onParsedResult?: (result: VoiceCareParseResponse) => void;
@@ -11,6 +14,9 @@ interface AiVoiceCareInputProps {
 }
 
 export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
+  residentId,
+  tasks,
+  onConfirmed,
   expectedResidentName,
   expectedRoomNumber,
   onParsedResult,
@@ -20,6 +26,10 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
   const [transcript, setTranscript] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastParsed, setLastParsed] = useState<VoiceCareParseResponse | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -63,14 +73,21 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
     } else {
       setTranscript("");
       setLastParsed(null);
+      setError("");
+      setSavedMessage("");
+      if (!recognitionRef.current) {
+        const manualInput = prompt("Enter the observed care note for this resident:", "");
+        if (manualInput) { setTranscript(manualInput); void handleProcessVoice(manualInput); }
+        return;
+      }
       try {
-        recognitionRef.current?.start();
+        recognitionRef.current.start();
         setIsListening(true);
       } catch {
         // Fallback prompt nếu SpeechRecognition không khả dụng
         const manualInput = prompt(
           "Enter dictated care observation (or type quickly):",
-          "Resident in Room 204 ate 85% of breakfast, blood pressure 125/80, completed morning oral medications"
+          ""
         );
         if (manualInput) {
           setTranscript(manualInput);
@@ -90,13 +107,36 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
         expectedRoomNumber,
       });
       setLastParsed(result);
-      if (onParsedResult) {
-        onParsedResult(result);
-      }
     } catch {
-      // Ignored
+      setError("Could not extract this note. You can try again or enter it manually.");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const confirm = async () => {
+    if (!lastParsed || !transcript.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      const saved = await aiService.confirmVoiceObservation({
+        residentId,
+        taskId: selectedTaskId ? Number(selectedTaskId) : undefined,
+        transcript,
+        parsed: lastParsed,
+      });
+      setSavedMessage(saved.vitalSignId
+        ? `Observation #${saved.observationId} and vital chart entry #${saved.vitalSignId} saved.`
+        : `Observation #${saved.observationId} saved.`);
+      onParsedResult?.(lastParsed);
+      onConfirmed?.();
+      setLastParsed(null);
+      setSelectedTaskId("");
+      setTranscript("");
+    } catch {
+      setError("Could not save the observation. Check the selected task and try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -137,14 +177,17 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
             "{transcript}"
           </span>
         )}
+        {transcript && !isListening && !isProcessing && !lastParsed && (
+          <button type="button" className="text-xs text-indigo-700 underline" onClick={() => void handleProcessVoice(transcript)}>Analyze note</button>
+        )}
       </div>
 
       {/* Extracted entities summary */}
       {lastParsed && (
-        <div className="p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-3 animate-in fade-in duration-150">
+        <div className="p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-zinc-700 dark:text-zinc-300 space-y-2 animate-in fade-in duration-150">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
-              <Check className="w-3.5 h-3.5" /> Auto-Extracted Entities:
+              <Check className="w-3.5 h-3.5" /> Extracted draft — verify before saving:
             </span>
             {lastParsed.dietaryIntakePercentage !== undefined && lastParsed.dietaryIntakePercentage !== null && (
               <span className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-medium">
@@ -158,7 +201,7 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
             )}
             {lastParsed.medicationTaken && (
               <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 font-medium">
-                ✓ Meds Administered
+                Medication mentioned — verify in eMAR
               </span>
             )}
           </div>
@@ -166,8 +209,24 @@ export const AiVoiceCareInput: React.FC<AiVoiceCareInputProps> = ({
             <Sparkles className="w-3 h-3 text-indigo-400" />
             Confidence: {(lastParsed.confidence * 100).toFixed(0)}%
           </span>
+          <div className="flex flex-wrap gap-2 items-center">
+            <select className="border rounded p-1 text-xs" aria-label="Task to complete after review" value={selectedTaskId} onChange={e => setSelectedTaskId(e.target.value)}>
+              <option value="">Save observation only</option>
+              {tasks.filter(task => task.status === "PENDING" && [
+                "BATHING", "DRESSING", "GROOMING", "TOILETING", "FEEDING",
+                "MEAL_ASSISTANCE", "HYDRATION", "MOBILITY", "TRANSFER",
+                "REPOSITIONING", "ACTIVITY",
+              ].includes(task.taskType.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "_")))
+                .map(task => <option key={task.id} value={task.id}>Complete #{task.id}: {task.taskType}</option>)}
+            </select>
+            <button type="button" className="rounded bg-emerald-700 text-white px-2 py-1 disabled:opacity-50" disabled={saving} onClick={() => void confirm()}>
+              {saving ? "Saving…" : "Confirm & save"}
+            </button>
+          </div>
         </div>
       )}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      {savedMessage && <p className="text-xs text-emerald-700">{savedMessage}</p>}
     </div>
   );
 };

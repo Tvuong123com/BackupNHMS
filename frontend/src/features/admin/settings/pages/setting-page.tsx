@@ -282,7 +282,7 @@ const SettingPage = () => {
                     <Label className="font-semibold text-xs text-gray-700">Idle Session Timeout</Label>
                     <Select
                       value={securitySettings.sessionTimeout}
-                      onValueChange={(val) => setSecuritySettings({ ...securitySettings, sessionTimeout: val })}
+                      onValueChange={(val) => val && setSecuritySettings({ ...securitySettings, sessionTimeout: val })}
                     >
                       <SelectTrigger className="font-semibold">
                         <SelectValue placeholder="Select timeout" />
@@ -299,7 +299,7 @@ const SettingPage = () => {
                     <Label className="font-semibold text-xs text-gray-700">Audit Log Data Retention Period</Label>
                     <Select
                       value={securitySettings.auditRetentionDays}
-                      onValueChange={(val) => setSecuritySettings({ ...securitySettings, auditRetentionDays: val })}
+                      onValueChange={(val) => val && setSecuritySettings({ ...securitySettings, auditRetentionDays: val })}
                     >
                       <SelectTrigger className="font-semibold">
                         <SelectValue placeholder="Select retention" />
@@ -338,7 +338,7 @@ const SettingPage = () => {
                   <Label className="font-semibold text-xs text-gray-700">ADL Re-assessment Mandatory Cycle</Label>
                   <Select
                     value={operationalRules.reassessmentCycleDays}
-                    onValueChange={(val) => setOperationalRules({ ...operationalRules, reassessmentCycleDays: val })}
+                    onValueChange={(val) => val && setOperationalRules({ ...operationalRules, reassessmentCycleDays: val })}
                   >
                     <SelectTrigger className="font-semibold">
                       <SelectValue placeholder="Select cycle" />
@@ -355,7 +355,7 @@ const SettingPage = () => {
                   <Label className="font-semibold text-xs text-gray-700">Emergency Incident Resolution SLA Window</Label>
                   <Select
                     value={operationalRules.emergencySlaMins}
-                    onValueChange={(val) => setOperationalRules({ ...operationalRules, emergencySlaMins: val })}
+                    onValueChange={(val) => val && setOperationalRules({ ...operationalRules, emergencySlaMins: val })}
                   >
                     <SelectTrigger className="font-semibold">
                       <SelectValue placeholder="Select SLA" />

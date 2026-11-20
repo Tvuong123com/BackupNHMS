@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import type { SuggestedGoal } from "@/features/admin/ai/types/ai.types";
 import type {
   GetCarePlanDetailResponse,
   GetCarePlanListResponse,
@@ -30,6 +31,18 @@ export const getCarePlanDetail = async (id: number) => {
   );
 
   return response.data;
+};
+
+export const getCarePlanResidents = async (): Promise<{ id: number; name: string }[]> =>
+  (await apiClient.get("/care-plans/residents")).data;
+
+export const createCarePlan = async (residentId: number, goals: SuggestedGoal[], purpose: "DRAFT" | "NEED_REVIEW") => {
+  const response = await apiClient.post<{ data: { id: number } }>("/care-plans", {
+    residentId,
+    listCareGoal: goals.map(goal => ({ name: goal.goalName, description: goal.description,
+      listCareIntervention: goal.interventions.map(item => ({ name: item.name, assingedRole: item.assignedRole })) })),
+  }, { params: { purpose } });
+  return response.data.data;
 };
 
 export type ApproveCarePlanResponse = {

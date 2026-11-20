@@ -38,7 +38,7 @@ export const AssessmentTable = () => {
   );
 
   const totalAssessments = data?.metadata?.totalElements ?? rawList.length;
-  const confirmedCount = rawList.filter((a) => a.status === "CONFIRMED").length;
+  const confirmedCount = rawList.filter((a) => a.status === "COMPLETED").length;
   const draftCount = rawList.filter((a) => a.status === "DRAFT").length;
 
   const columns = getAssessmentColumns({

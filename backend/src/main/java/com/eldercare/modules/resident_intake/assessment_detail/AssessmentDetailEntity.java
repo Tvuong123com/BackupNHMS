@@ -4,6 +4,7 @@ import com.eldercare.modules.resident_intake.assessment.AssessmentEntity;
 import com.eldercare.modules.resident_intake.assessment_metric.AssessmentMetricEntity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
 @Entity
 @Table(name = "assessment_details")
@@ -22,6 +24,8 @@ public class AssessmentDetailEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private Integer score;
+  @Nationalized
+  @Column(columnDefinition = "NVARCHAR(MAX)")
   private String notes;
   @ManyToOne
   @JoinColumn(name = "assessment_id")

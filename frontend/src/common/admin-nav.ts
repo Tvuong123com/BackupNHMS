@@ -18,6 +18,7 @@ import {
   Clock,
   Clock3,
   Package,
+  FileText,
 } from "lucide-react";
 import { PERMISSIONS, type PermissionCode } from "@/common/permissions";
 
@@ -154,6 +155,12 @@ export const adminNavGroups: AdminNavGroup[] = [
         label: "Care Tasks",
         path: "/admin/care-tasks",
         icon: ListChecks,
+        permission: PERMISSIONS.CARE_TASK_VIEW,
+      },
+      {
+        label: "Shift Handover (SBAR)",
+        path: "/admin/shift-handover",
+        icon: FileText,
         permission: PERMISSIONS.CARE_TASK_VIEW,
       },
     ],

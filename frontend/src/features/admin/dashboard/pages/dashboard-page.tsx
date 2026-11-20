@@ -12,14 +12,19 @@ import {
   Bed,
   CheckCircle2,
   AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router";
 import { AiRiskAlertWidget } from "@/features/admin/ai/components/ai-risk-alert-widget";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { isClinicalReviewer } from "@/features/auth/role-permissions";
 
 const DashboardPage = () => {
   const [timeRange] = useState("Today");
+  const { data: currentUser } = useCurrentUser();
+  const clinicalReviewer = currentUser ? isClinicalReviewer(currentUser.roleName) : false;
 
   // Sample analytical metrics
   const stats = [
@@ -82,13 +87,18 @@ const DashboardPage = () => {
             <Activity className="h-3.5 w-3.5" /> ElderCare Management Suite
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Welcome back, System Administrator
+            Care operations dashboard
           </h1>
           <p className="text-blue-200/80 text-sm max-w-xl">
-            Here is what is happening across your facilities today. All critical telemetry systems are functioning normally.
+            Review resident priorities and open care workflows. The summary cards and activity lists on this page are demonstration data.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {clinicalReviewer && <Link to="/admin/shift-handover">
+            <Button variant="secondary" className="font-semibold shadow-md">
+              <FileText className="mr-2 h-4 w-4" /> Shift Handover
+            </Button>
+          </Link>}
           <Link to="/admin/residents">
             <Button variant="secondary" className="font-semibold shadow-md">
               <UserCheck className="mr-2 h-4 w-4" /> View Residents
@@ -132,8 +142,8 @@ const DashboardPage = () => {
         })}
       </div>
 
-      {/* AI Predictive Risk Alerts */}
-      <AiRiskAlertWidget />
+      {/* Resident review uses recorded data; surrounding dashboard examples are demo data. */}
+      {clinicalReviewer && <AiRiskAlertWidget />}
 
       {/* Main Content Grid */}
       <div className="grid gap-8 lg:grid-cols-3">
@@ -143,8 +153,8 @@ const DashboardPage = () => {
           <Card className="border-gray-100 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Recent Incidents & SLAs</CardTitle>
-                <p className="text-xs text-gray-500 mt-1">Real-time alerts requiring staff response</p>
+                <CardTitle className="text-lg font-bold text-gray-900">Example Incidents & SLAs</CardTitle>
+                <p className="text-xs text-gray-500 mt-1">Demonstration entries; open Incidents for actual records</p>
               </div>
               <Link to="/admin/incidents">
                 <Button variant="outline" size="sm">View All</Button>
@@ -178,8 +188,8 @@ const DashboardPage = () => {
           <Card className="border-gray-100 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Pending Reviews & Approvals</CardTitle>
-                <p className="text-xs text-gray-500 mt-1">Intake screenings, care plan approvals, and care level transitions</p>
+                <CardTitle className="text-lg font-bold text-gray-900">Example Reviews & Approvals</CardTitle>
+                <p className="text-xs text-gray-500 mt-1">Demonstration entries; open each module for actual records</p>
               </div>
               <Link to="/admin/care-plans">
                 <Button variant="outline" size="sm">Care Plans</Button>

@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListTab } from "../tabs/list-tab";
 import { ReportTab } from "../tabs/report-tab";
@@ -21,10 +22,16 @@ const tabs = [
 
 const IncidentPage = () => {
   const { can } = usePermissions();
+  const [searchParams, setSearchParams] = useSearchParams();
   const visibleTabs = tabs.filter((t) => can(t.permission));
+  const activeTab = searchParams.get("tab") || visibleTabs[0]?.value || "list";
+
+  const handleTabChange = (val: string) => {
+    setSearchParams(val === "list" ? {} : { tab: val });
+  };
 
   return (
-    <Tabs defaultValue={visibleTabs[0]?.value}>
+    <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList className="w-full">
         {visibleTabs.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>

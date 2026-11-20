@@ -69,12 +69,12 @@ public class AssessmentServiceImpl implements AssessmentService {
 
                 ResidentEntity resident = admission.getResident();
 
-                assessRepo.findByResidentIdAndIsCurrentTrue(resident.getId())
-                                .ifPresent(old -> {
-                                        if ("DRAFT".equals(old.getStatus())) {
-                                                throw new RuntimeException(
-                                                                "Resident already has a draft assessment in progress");
-                                        }
+                var existing = assessRepo.findByResidentIdAndIsCurrentTrue(resident.getId());
+                if (existing.isPresent() && "DRAFT".equals(existing.get().getStatus())) {
+                        throw new RuntimeException("Resident already has a draft assessment in progress");
+                }
+                validateScores(req.getDetails());
+                existing.ifPresent(old -> {
                                         old.setIsCurrent(false);
                                         assessRepo.save(old);
                                 });
@@ -96,14 +96,13 @@ public class AssessmentServiceImpl implements AssessmentService {
 
                 for (AssessmentDetailRequest d : req.getDetails()) {
                         AssessmentDetailEntity det = new AssessmentDetailEntity();
-                        AssessmentMetricEntity metric = new AssessmentMetricEntity();
-                        metric.setId(d.getMetricId());
+                        AssessmentMetricEntity metric = metricRepo.findById(d.getMetricId()).orElseThrow();
                         det.setMetric(metric);
                         det.setScore(d.getScore());
                         det.setNotes(d.getNotes());
                         det.setAssessment(a);
                         details.add(det);
-                        total += d.getScore();
+                        if ("ADL".equalsIgnoreCase(metric.getCategory())) total += d.getScore();
                 }
 
                 a.setDetails(details);
@@ -122,19 +121,19 @@ public class AssessmentServiceImpl implements AssessmentService {
                 if (!"DRAFT".equals(a.getStatus())) {
                         throw new RuntimeException("Only DRAFT assessment can be updated");
                 }
+                validateScores(req.getDetails());
 
                 int total = 0;
                 List<AssessmentDetailEntity> details = new ArrayList<>();
                 for (AssessmentDetailRequest d : req.getDetails()) {
                         AssessmentDetailEntity det = new AssessmentDetailEntity();
-                        AssessmentMetricEntity metric = new AssessmentMetricEntity();
-                        metric.setId(d.getMetricId());
+                        AssessmentMetricEntity metric = metricRepo.findById(d.getMetricId()).orElseThrow();
                         det.setMetric(metric);
                         det.setScore(d.getScore());
                         det.setNotes(d.getNotes());
                         det.setAssessment(a);
                         details.add(det);
-                        total += d.getScore();
+                        if ("ADL".equalsIgnoreCase(metric.getCategory())) total += d.getScore();
                 }
 
                 a.getDetails().clear();
@@ -267,6 +266,17 @@ public class AssessmentServiceImpl implements AssessmentService {
                         return r;
                 }).toList());
                 return dto;
+        }
+
+        private void validateScores(List<AssessmentDetailRequest> details) {
+                if (details == null || details.isEmpty()) throw new IllegalArgumentException("Enter observed assessment scores");
+                java.util.Set<Long> seen = new java.util.HashSet<>();
+                for (var detail : details) {
+                        if (detail == null || detail.getMetricId() == null || !seen.add(detail.getMetricId())
+                                        || detail.getScore() == null || detail.getScore() < 0)
+                                throw new IllegalArgumentException("Each metric requires one non-negative observed score");
+                        if (!metricRepo.existsById(detail.getMetricId())) throw new IllegalArgumentException("Unknown assessment metric; refresh the form");
+                }
         }
 
         private CareLevelEntity calculateSuggestedCareLevel(int totalScore) {

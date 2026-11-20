@@ -1,252 +1,49 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-
+import { LookupSelect, apiErrorMessage } from "@/components/common/lookup-select";
 import { useCreateAdmission } from "../hooks/use-create-admission";
 import { useCompletedScreenings } from "../../pre-admission/hooks/use-completed-screenings";
-import { useDialogStore } from "@/store/use-dialog-store";
 import { useFacilityForSelect } from "../hooks/use-facility-select";
-
-const formSchema = z.object({
-  preAdmissionScreeningId: z.string().min(1, "Please select a screening."),
-  facilityId: z.string().min(1, "Please select a facility."),
-  roomId: z.string().min(1, "Please select a room."),
-  bedId: z.string().min(1, "Please select a bed."),
-  admissionDate: z.string().min(1, "Required."),
-});
+import { useDialogStore } from "@/store/use-dialog-store";
 
 export const CreateAdmissionForm = () => {
-  const { data: screenings, isLoading } = useCompletedScreenings();
-  const screeningOptions = screenings?.data ?? [];
-  const { data: facilities, isLoading: isFacilityLoading } =
-    useFacilityForSelect();
-  const facilityOptions = facilities?.data ?? [];
-  const createMutation = useCreateAdmission();
-  const close = useDialogStore((s) => s.close);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      preAdmissionScreeningId: "",
-      facilityId: "",
-      roomId: "",
-      bedId: "",
-      admissionDate: "",
-    },
-  });
-
-  const selectedFacilityId = form.watch("facilityId");
-  const selectedRoomId = form.watch("roomId");
-
-  const selectedFacility = facilityOptions.find(
-    (f) => String(f.id) === selectedFacilityId,
-  );
-
-  const roomOptions = selectedFacility?.rooms ?? [];
-
-  const selectedRoom = roomOptions.find((r) => String(r.id) === selectedRoomId);
-
-  const bedOptions = selectedRoom?.beds ?? [];
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createMutation.mutate(
-      {
-        preAdmissionScreeningId: Number(values.preAdmissionScreeningId),
-        facilityId: Number(values.facilityId),
-        bedId: Number(values.bedId),
-        admissionDate: values.admissionDate,
-      },
-      {
-        onSuccess: close,
-      },
-    );
-  };
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <FieldGroup>
-        <Controller
-          name="preAdmissionScreeningId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>
-                Pre-Admission Screening
-              </FieldLabel>
-              <Select
-                name={field.name}
-                value={field.value}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger
-                  id={field.name}
-                  aria-invalid={fieldState.invalid}
-                >
-                  <SelectValue
-                    placeholder={isLoading ? "Loading..." : "Select screening"}
-                  >
-                    {
-                      screeningOptions.find((s) => String(s.id) === field.value)
-                        ?.residentName
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {screeningOptions.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      #{s.id} - {s.residentName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          name="facilityId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Facility</FieldLabel>
-              <Select
-                value={field.value}
-                onValueChange={(value) => {
-                  field.onChange(value);
-
-                  form.setValue("roomId", "");
-                  form.setValue("bedId", "");
-                }}
-              >
-                <SelectTrigger
-                  id={field.name}
-                  aria-invalid={fieldState.invalid}
-                >
-                  <SelectValue
-                    placeholder={
-                      isFacilityLoading ? "Loading..." : "Select facility"
-                    }
-                  >
-                    {
-                      facilityOptions.find((f) => String(f.id) === field.value)
-                        ?.name
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {facilityOptions.map((f) => (
-                    <SelectItem key={f.id} value={String(f.id)}>
-                      {f.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          name="roomId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Room</FieldLabel>
-
-              <Select
-                value={field.value}
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  form.setValue("bedId", "");
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select room">
-                    {
-                      roomOptions.find((r) => String(r.id) === field.value)
-                        ?.roomNumber
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-
-                <SelectContent>
-                  {roomOptions.map((room) => (
-                    <SelectItem key={room.id} value={String(room.id)}>
-                      {room.roomNumber}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          name="bedId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Bed</FieldLabel>
-
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select bed">
-                    {
-                      bedOptions.find((b) => String(b.id) === field.value)
-                        ?.bedNumber
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-
-                <SelectContent>
-                  {bedOptions.map((bed) => (
-                    <SelectItem key={bed.id} value={String(bed.id)}>
-                      {bed.bedNumber}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          name="admissionDate"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Admission Date</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="date"
-                aria-invalid={fieldState.invalid}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      </FieldGroup>
-      <Button type="submit" disabled={createMutation.isPending}>
-        Create
-      </Button>
-    </form>
-  );
+  const screenings = useCompletedScreenings();
+  const facilities = useFacilityForSelect();
+  const [screeningId, setScreeningId] = useState("");
+  const [facilityId, setFacilityId] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [bedId, setBedId] = useState("");
+  const [date, setDate] = useState("");
+  const create = useCreateAdmission();
+  const close = useDialogStore(state => state.close);
+  const screeningOptions = screenings.data?.data ?? [];
+  const facilityOptions = facilities.data?.data ?? [];
+  const facility = facilityOptions.find(item => String(item.id) === facilityId);
+  const rooms = (facility?.rooms ?? []).filter(room => room.beds.length > 0);
+  const room = rooms.find(item => String(item.id) === roomId);
+  const beds = room?.beds ?? [];
+  const eligible = screeningOptions.some(item => String(item.id) === screeningId) && !!facility && beds.some(item => String(item.id) === bedId);
+  return <form className="space-y-4" onSubmit={event => {
+    event.preventDefault();
+    if (!eligible || !date) return;
+    create.mutate({ preAdmissionScreeningId: Number(screeningId), facilityId: Number(facilityId), bedId: Number(bedId), admissionDate: date }, { onSuccess: close });
+  }}>
+    <LookupSelect id="admission-screening" label="Pre-Admission Screening" value={screeningId} onChange={setScreeningId}
+      loading={screenings.isPending} failed={screenings.isError} retry={() => void screenings.refetch()} disabled={create.isPending}
+      options={screeningOptions.map(item => ({ value: String(item.id), label: `#${item.id} · ${item.residentName}` }))}
+      emptyMessage="No completed, current screening is available for a resident awaiting admission. Complete the screening first." />
+    {screeningOptions.length === 0 && !screenings.isPending && <a href="/admin/pre-admission" onClick={close} className="text-sm text-blue-600 underline">Open Pre-Admission Screenings</a>}
+    <LookupSelect id="admission-facility" label="Facility" value={facilityId} onChange={value => { setFacilityId(value); setRoomId(""); setBedId(""); }}
+      loading={facilities.isPending} failed={facilities.isError} retry={() => void facilities.refetch()} disabled={create.isPending}
+      options={facilityOptions.map(item => ({ value: String(item.id), label: item.name }))} emptyMessage="No facilities are configured." />
+    <LookupSelect id="admission-room" label="Room" value={roomId} onChange={value => { setRoomId(value); setBedId(""); }}
+      disabled={!facility || create.isPending} options={rooms.map(item => ({ value: String(item.id), label: `${item.roomNumber} · ${item.beds.length} available bed(s)` }))}
+      placeholder="Select a room with available beds" emptyMessage="This facility has no rooms with available beds." />
+    <LookupSelect id="admission-bed" label="Bed" value={bedId} onChange={setBedId} disabled={!room || create.isPending}
+      options={beds.map(item => ({ value: String(item.id), label: `${room?.roomNumber} · Bed ${item.bedNumber}` }))} emptyMessage="This room has no available beds." />
+    <label className="block text-sm font-medium" htmlFor="admission-date">Admission Date</label>
+    <input id="admission-date" type="date" required disabled={create.isPending} value={date} onChange={event => setDate(event.target.value)} className="w-full rounded-lg border px-3 py-2 text-sm" />
+    {create.isError && <p role="alert" className="text-sm text-destructive">{apiErrorMessage(create.error, "Could not create admission. Refresh the choices; the bed or screening may no longer be available.")}</p>}
+    <Button type="submit" disabled={create.isPending || !eligible || !date}>{create.isPending ? "Creating…" : "Create"}</Button>
+  </form>;
 };

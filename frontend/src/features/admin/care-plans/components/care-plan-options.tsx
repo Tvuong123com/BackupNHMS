@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ChevronDown, Search, Plus, LayoutGrid } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 const statusOptions = [
   "All",
@@ -26,6 +27,7 @@ type CarePlanOptionsProps = {
 };
 
 export default function CarePlanOptions(props: CarePlanOptionsProps) {
+  const navigate = useNavigate();
   const [status, setStatus] = useState("All");
   const [review, setReview] = useState("All");
   const [residentName, setResidentName] = useState("");
@@ -59,11 +61,9 @@ export default function CarePlanOptions(props: CarePlanOptionsProps) {
         <div className="flex flex-wrap items-center gap-2">
           {/* Status Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full sm:w-auto flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 h-9 text-sm font-medium text-slate-700 hover:bg-slate-50 min-w-[130px] text-left cursor-pointer outline-none">
+            <DropdownMenuTrigger className="w-full sm:w-auto flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 h-9 text-sm font-medium text-slate-700 hover:bg-slate-50 min-w-[130px] text-left cursor-pointer outline-none">
                 <span>Status: {status}</span>
                 <ChevronDown className="size-3.5 text-slate-400" />
-              </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="w-[160px] bg-white border border-slate-200 rounded-lg shadow-md z-30 py-1">
@@ -91,11 +91,9 @@ export default function CarePlanOptions(props: CarePlanOptionsProps) {
 
           {/* Review Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full sm:w-auto flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 h-9 text-sm font-medium text-slate-700 hover:bg-slate-50 min-w-[140px] text-left cursor-pointer outline-none">
+            <DropdownMenuTrigger className="w-full sm:w-auto flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 h-9 text-sm font-medium text-slate-700 hover:bg-slate-50 min-w-[140px] text-left cursor-pointer outline-none">
                 <span>Review: {review}</span>
                 <ChevronDown className="size-3.5 text-slate-400" />
-              </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="w-[160px] bg-white border border-slate-200 rounded-lg shadow-md z-30 py-1">
@@ -122,7 +120,7 @@ export default function CarePlanOptions(props: CarePlanOptionsProps) {
       </div>
 
       {/* Add New Care Plan Button */}
-      <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2.5 h-9 text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-98 whitespace-nowrap">
+      <button type="button" onClick={() => navigate("/admin/care-plans/new")} className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2.5 h-9 text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-98 whitespace-nowrap">
         <Plus className="size-4" />
         New Care Plan
       </button>

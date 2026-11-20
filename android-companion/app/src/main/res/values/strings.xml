@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">NHMS CareCompanion</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_activities">Activities</string>
+    <string name="tab_tasks">Tasks</string>
+    <string name="tab_notifications">Alerts</string>
+    <string name="tab_account">Account</string>
+</resources>

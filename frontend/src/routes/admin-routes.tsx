@@ -2,11 +2,13 @@ import AdmissionPage from "@/features/admin/admissions/pages/admission-page";
 import PreAdmissionPage from "@/features/admin/pre-admission/pages/pre-admission-page";
 import AuditlogPage from "@/features/admin/audit-logs/pages/audit-log-page";
 import CarePlanPage from "@/features/admin/care-plans/pages/care-plan-page";
+import CreateCarePlanPage from "@/features/admin/care-plans/pages/create-care-plan-page";
 import CareTaskPage from "@/features/admin/care-tasks/pages/care-task-page";
 import DashboardPage from "@/features/admin/dashboard/pages/dashboard-page";
 import FacilityPage from "@/features/admin/facilities/pages/facility-page";
 import IncidentSeverityPage from "@/features/admin/incident-severity/pages/incident-severity-page";
 import IncidentPage from "@/features/admin/incidents/pages/incident-page";
+import IncidentRecordPage from "@/features/admin/incidents/pages/incident-record-page";
 import NotificationPage from "@/features/admin/notifications/pages/notification-page";
 import ProfilePage from "@/features/admin/profile/pages/profile-page";
 import ResidentPage from "@/features/admin/residents/pages/resident-page";
@@ -26,6 +28,7 @@ import { AssessmentPage } from "@/features/admin/assessment/pages/assessment-pag
 import CarePlanReviewPage from "@/features/admin/care-plans/pages/care-plan-review-page";
 import CarePlanDetailPage from "@/features/admin/care-plans/pages/care-plan-detail/care-plan-detail-page";
 import EquipmentPage from "@/features/admin/inventory/pages/equipment-page";
+import ShiftHandoverPage from "@/features/admin/ai/pages/shift-handover-page";
 
 import { LOCRatesPage } from "@/features/admin/facilities/pages/loc-rates-page";
 import UserPage from "@/features/admin/users/pages/users-page";
@@ -157,6 +160,14 @@ export const adminRoutes: RouteObject = {
         </RequirePermission>
       ),
     },
+    {
+      path: "incidents/:id",
+      element: (
+        <RequirePermission permission={PERMISSIONS.INCIDENTS_VIEW}>
+          <IncidentRecordPage />
+        </RequirePermission>
+      ),
+    },
 
     {
       path: "sla-config",
@@ -173,6 +184,10 @@ export const adminRoutes: RouteObject = {
           <CarePlanPage />
         </RequirePermission>
       ),
+    },
+    {
+      path: "care-plans/new",
+      element: <RequirePermission permission={PERMISSIONS.CARE_PLAN_VIEW}><CreateCarePlanPage /></RequirePermission>,
     },
     {
       path: "care-plans/:id",
@@ -195,6 +210,14 @@ export const adminRoutes: RouteObject = {
       element: (
         <RequirePermission permission={PERMISSIONS.CARE_TASK_VIEW}>
           <CareTaskPage />
+        </RequirePermission>
+      ),
+    },
+    {
+      path: "shift-handover",
+      element: (
+        <RequirePermission permission={PERMISSIONS.CARE_TASK_VIEW}>
+          <ShiftHandoverPage />
         </RequirePermission>
       ),
     },

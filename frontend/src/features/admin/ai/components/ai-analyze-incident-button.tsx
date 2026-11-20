@@ -152,7 +152,7 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                 {result.recommendedActions && result.recommendedActions.length > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider block">
-                      Immediate Clinical Actions
+                      Review and escalation suggestions
                     </span>
                     <ul className="space-y-1">
                       {result.recommendedActions.map((action, i) => (
@@ -169,8 +169,8 @@ export const AiAnalyzeIncidentButton: React.FC<AiAnalyzeIncidentButtonProps> = (
                 )}
 
                 <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                  <span>Confidence: {(result.confidence * 100).toFixed(0)}%</span>
-                  <span className="italic">Clinical Human-in-the-Loop</span>
+                  <span>Unvalidated model estimate: {(result.confidence * 100).toFixed(0)}%</span>
+                  <span className="italic">Staff must confirm</span>
                 </div>
               </div>
             )}

@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import {
   ServiceHero,
   WhatWeProvide,
@@ -86,6 +87,100 @@ export default function MemoryCarePage() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Evidence-Based Clinical Guidance Section (Replacing Unsafe AI Checker) */}
+      <section className="py-16 bg-gradient-to-br from-[#F5F3FF] via-white to-[#F5F3FF]/50 border-y border-purple-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-3 py-1 rounded-full border border-purple-200">
+              Clinical Care Guide
+            </span>
+            <h2 className="text-3xl font-bold text-[#0f1a3e] mt-2">
+              Normal Aging vs. Memory Impairment
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Understanding cognitive changes helps families make informed, timely care choices before safety risks arise.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🌱</span>
+                <h3 className="font-bold text-[#0f1a3e] text-lg">Typical Age-Related Changes</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  Occasionally misplacing keys, glasses, or names, but recalling them later
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  Pausing to search for the right word during a conversation
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  Occasionally forgetting which day it is, but figuring it out promptly
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  Able to manage medications and personal finances independently
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-purple-50/70 rounded-3xl p-6 sm:p-8 border border-purple-200/80 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🧠</span>
+                <h3 className="font-bold text-purple-900 text-lg">Signs That Warrant Professional Evaluation</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-purple-950">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-600 font-bold">⚠️</span>
+                  Repeatedly asking the same questions or forgetting recent events and conversations
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-600 font-bold">⚠️</span>
+                  Disorientation to time, date, or getting lost in familiar neighborhoods
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-600 font-bold">⚠️</span>
+                  Noticeable changes in mood, sudden agitation, or evening sundowning behaviors
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-600 font-bold">⚠️</span>
+                  Struggling with familiar daily tasks (cooking, managing bills, medication safety)
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border-2 border-purple-200 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md">
+            <div>
+              <h4 className="text-xl font-bold text-[#0f1a3e]">
+                Concerned about a loved one's memory or daily safety?
+              </h4>
+              <p className="text-sm text-gray-500 mt-1 max-w-xl">
+                Every resident in our Memory Care Wing receives a confidential cognitive assessment (Mini-Cog / MoCA) guided by our licensed nursing team. Schedule a consultation to explore person-centered support.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              <Link
+                to="/contact"
+                className="px-6 py-3.5 bg-[#7C3AED] hover:bg-[#6d28d9] text-white font-bold rounded-2xl shadow-lg shadow-purple-500/20 text-sm transition-all"
+              >
+                Schedule Memory Consultation
+              </Link>
+              <a
+                href="tel:9165559000"
+                className="px-5 py-3.5 border border-purple-200 bg-purple-50/50 hover:bg-purple-100/50 text-[#7C3AED] font-bold rounded-2xl text-sm transition-all"
+              >
+                Call (916) 555-9000
+              </a>
             </div>
           </div>
         </div>

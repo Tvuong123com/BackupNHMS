@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { WebsiteNavbar } from "@/features/website/components/layout/website-navbar";
 import { WebsiteFooter } from "@/features/website/components/layout/website-footer";
+import { WebsiteChatWidget } from "@/features/website/components/ai/website-chat-widget";
 
 export function WebsiteLayout() {
   return (
@@ -10,6 +11,7 @@ export function WebsiteLayout() {
         <Outlet />
       </main>
       <WebsiteFooter />
+      <WebsiteChatWidget />
     </div>
   );
 }

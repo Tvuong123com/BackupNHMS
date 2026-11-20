@@ -10,9 +10,12 @@ import com.eldercare.modules.ai.voice.dto.VoiceCareParseRequest;
 import com.eldercare.modules.ai.voice.dto.VoiceCareParseResponse;
 import com.eldercare.modules.ai.voice.service.VoiceCareAiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import com.eldercare.modules.ai.engine.AiExecutionService;
+import com.eldercare.modules.resident_intake.resident.repository.ResidentRepository;
+import com.eldercare.modules.resident_intake.assessment.repository.AssessmentRepository;
+import com.eldercare.modules.risk_incident.incident_tracking.repository.IncidentRepository;
+import com.eldercare.modules.resident_intake.resident.repository.ClinicalRecordRepository;
+import com.eldercare.modules.resident_intake.resident_profile.ResidentEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class CarePlanAndSummaryAiTest {
@@ -37,14 +42,16 @@ class CarePlanAndSummaryAiTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        carePlanAiService = new CarePlanAiService(aiExecutionService, objectMapper);
+        carePlanAiService = new CarePlanAiService(aiExecutionService, objectMapper,
+                mock(ResidentRepository.class), mock(AssessmentRepository.class),
+                mock(IncidentRepository.class), mock(ClinicalRecordRepository.class));
         summaryAiService = new SummaryAiService(aiExecutionService, objectMapper);
         voiceCareAiService = new VoiceCareAiService(aiExecutionService, objectMapper);
     }
 
     @Test
-    @DisplayName("Nên đề xuất mục tiêu phòng ngừa té ngã khi cư dân có tiền sử té ngã")
-    void shouldSuggestFallPreventionGoal() {
+    @DisplayName("Clinical suggestions require a real resident record")
+    void shouldRejectUnidentifiedResident() {
         CarePlanSuggestionRequest request = CarePlanSuggestionRequest.builder()
                 .residentName("Eleanor Vance")
                 .age(82)
@@ -53,11 +60,25 @@ class CarePlanAndSummaryAiTest {
                 .recentIncidents(List.of("Té ngã tại phòng vệ sinh tuần trước"))
                 .build();
 
-        CarePlanSuggestionResponse response = carePlanAiService.suggestCarePlan(request);
+        assertThrows(IllegalArgumentException.class, () -> carePlanAiService.suggestCarePlan(request));
+    }
 
-        assertNotNull(response);
-        assertNotNull(response.getSuggestedGoals());
-        assertTrue(response.getSuggestedGoals().stream().anyMatch(g -> g.getGoalName().contains("Phòng ngừa Té ngã")));
+    @Test
+    @DisplayName("Unavailable AI does not invent clinical goals or interventions")
+    void shouldNotInventGoalsOnAiFailure() {
+        ResidentRepository residents = mock(ResidentRepository.class);
+        when(residents.findByIdAndIsDeletedFalse(7L)).thenReturn(Optional.of(
+                ResidentEntity.builder().id(7L).firstName("Lan").lastName("Nguyen").build()));
+        when(aiExecutionService.execute(anyString(), anyString()))
+                .thenThrow(new IllegalStateException("unavailable"));
+        var service = new CarePlanAiService(aiExecutionService, new ObjectMapper(), residents,
+                mock(AssessmentRepository.class), mock(IncidentRepository.class),
+                mock(ClinicalRecordRepository.class));
+
+        var response = service.suggestCarePlan(CarePlanSuggestionRequest.builder().residentId(7L).build());
+
+        assertTrue(response.getSuggestedGoals().isEmpty());
+        assertTrue(response.getResidentSummary().contains("chưa tạo được"));
     }
 
     @Test

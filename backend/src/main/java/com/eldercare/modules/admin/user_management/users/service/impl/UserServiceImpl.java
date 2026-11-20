@@ -127,32 +127,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getActiveCnas() {
-        // Find role by name "CNA"
-        RoleEntity cnaRole = roleRepository.findByRoleName("CNA")
-                .orElse(null);
-
-        if (cnaRole == null) {
-            // fallback: return all active users if CNA role is not seeded yet, or return empty
-            return userRepository.findAllByIsDeletedFalse().stream()
-                    .filter(u -> "ACTIVE".equalsIgnoreCase(u.getStatus()))
-                    .map(userMapper::toResponse)
-                    .toList();
-        }
-
-        // Try to find users with CNA role
-        List<UserResponse> cnas = userRepository.findByRoleIdAndStatusAndIsDeletedFalse(cnaRole.getId(), "ACTIVE").stream()
+        return userRepository.findAllByIsDeletedFalse().stream()
+                .filter(u -> "ACTIVE".equalsIgnoreCase(u.getStatus()))
+                .filter(u -> u.getRole() != null && u.getRole().getRoleName() != null)
+                .filter(u -> {
+                    String roleName = u.getRole().getRoleName().trim();
+                    return "CNA".equalsIgnoreCase(roleName)
+                            || "CNA_(Caregiver)".equalsIgnoreCase(roleName);
+                })
                 .map(userMapper::toResponse)
                 .toList();
-
-        // If no user has CNA role specifically, fallback to return all active users in the app
-        if (cnas.isEmpty()) {
-            return userRepository.findAllByIsDeletedFalse().stream()
-                    .filter(u -> "ACTIVE".equalsIgnoreCase(u.getStatus()))
-                    .map(userMapper::toResponse)
-                    .toList();
-        }
-
-        return cnas;
     }
 
     // ==============================

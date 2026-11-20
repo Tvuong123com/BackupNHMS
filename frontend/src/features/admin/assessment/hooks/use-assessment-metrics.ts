@@ -5,4 +5,5 @@ export const useAssessmentMetrics = () =>
   useQuery({
     queryKey: ["assessments", "metrics"],
     queryFn: getMetrics,
+    retry: false,
   });

@@ -10,7 +10,8 @@ import {
   UserX,
   Clock,
   ChevronRight,
-  Info
+  Info,
+  X
 } from 'lucide-react'
 
 // Define the interface for a resident

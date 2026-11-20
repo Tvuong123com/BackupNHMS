@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 
 const ProfilePage = () => {
-  const { user } = useCurrentUser();
+  const { data: user } = useCurrentUser();
   const [firstName, setFirstName] = useState("Daniel");
   const [lastName, setLastName] = useState("Brooks");
   const [phone, setPhone] = useState("916-555-9999");
@@ -59,7 +59,7 @@ const ProfilePage = () => {
               </Badge>
             </div>
             <p className="text-sm text-blue-200/80 flex items-center justify-center sm:justify-start gap-2">
-              <Mail className="h-4 w-4" /> {user?.sub || "daniel.brooks@nhms-demo.local"}
+              <Mail className="h-4 w-4" /> {user?.email || "daniel.brooks@nhms-demo.local"}
             </p>
             <div className="pt-2 flex items-center justify-center sm:justify-start gap-4 text-xs text-blue-300/70">
               <span className="flex items-center gap-1"><Building className="h-3.5 w-3.5" /> NHMS Central Headquarters</span>
@@ -106,7 +106,7 @@ const ProfilePage = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={user?.sub || "daniel.brooks@nhms-demo.local"}
+                    value={user?.email || "daniel.brooks@nhms-demo.local"}
                     disabled
                     className="pl-9 bg-gray-50 text-gray-500 cursor-not-allowed"
                   />

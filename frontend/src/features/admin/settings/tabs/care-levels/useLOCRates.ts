@@ -20,8 +20,8 @@ export const useLOCRates = () => {
       
       for (let i = 1; i <= 4; i++) {
         const response = await careLevelApi.getCareLevelRates(i);
-        if (response && response.length > 0) {
-          allRates.push(response[0]);
+        if (response.data.length > 0) {
+          allRates.push(response.data[0]);
         } else {
           // Create default rate if none exists
           const createResponse = await careLevelApi.createCareLevelRate({
@@ -30,7 +30,7 @@ export const useLOCRates = () => {
             daily_rate: parseFloat(TIERS[i - 1].defaultRate),
             effective_from: new Date().toISOString().split('T')[0],
           });
-          allRates.push(createResponse);
+          allRates.push(createResponse.data);
         }
       }
       

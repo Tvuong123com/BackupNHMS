@@ -40,6 +40,13 @@ import com.eldercare.modules.resident_intake.resident_profile.ResidentEntity;
 
 @ExtendWith(MockitoExtension.class)
 public class AssessmentServiceTests {
+  private AssessmentDetailRequest observedScore(int score) {
+    var metric = new com.eldercare.modules.resident_intake.assessment_metric.AssessmentMetricEntity();
+    metric.setId(1L); metric.setCategory("ADL"); metric.setMetricName("Bathing");
+    when(metricRepo.existsById(1L)).thenReturn(true);
+    when(metricRepo.findById(1L)).thenReturn(Optional.of(metric));
+    var detail = new AssessmentDetailRequest(); detail.setMetricId(1L); detail.setScore(score); return detail;
+  }
   @Mock
   private AssessmentRepository assessRepo;
   @Mock
@@ -109,7 +116,7 @@ public class AssessmentServiceTests {
 
     AssessmentCreateRequest req = new AssessmentCreateRequest();
     req.setAdmissionId(1L);
-    req.setDetails(List.of());
+    req.setDetails(List.of(observedScore(0)));
 
     assertDoesNotThrow(() -> service.create(req));
   }
@@ -171,9 +178,7 @@ public class AssessmentServiceTests {
     level.setId(expectedLevelId);
     when(careLevelRepo.findById(expectedLevelId)).thenReturn(Optional.of(level));
 
-    AssessmentDetailRequest d = new AssessmentDetailRequest();
-    d.setMetricId(1L);
-    d.setScore(score);
+    AssessmentDetailRequest d = observedScore(score);
 
     AssessmentCreateRequest req = new AssessmentCreateRequest();
     req.setAdmissionId(1L);
@@ -194,9 +199,7 @@ public class AssessmentServiceTests {
     when(assessRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(careLevelRepo.findById(anyLong())).thenReturn(Optional.of(new CareLevelEntity()));
 
-    AssessmentDetailRequest d = new AssessmentDetailRequest();
-    d.setMetricId(1L);
-    d.setScore(60);
+    AssessmentDetailRequest d = observedScore(60);
     AssessmentUpdateRequest req = new AssessmentUpdateRequest();
     req.setDetails(List.of(d));
 

@@ -13,6 +13,9 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByEmailAndIsDeletedFalse(String email);
+
+    @Query("SELECT u FROM UserEntity u JOIN FETCH u.role WHERE u.email = :email AND u.isDeleted = false")
+    Optional<UserEntity> findActiveByEmailWithRole(@Param("email") String email);
     List<UserEntity> findAllByIsDeletedFalse();
 
     @Query("""

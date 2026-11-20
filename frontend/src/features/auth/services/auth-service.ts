@@ -1,9 +1,6 @@
 import { axiosInstance as axios } from "@/lib/axios";
-import {
-  mockUsersByRole,
-  CURRENT_MOCK_ROLE,
-  type MockUser,
-} from "@/mocks/permission-data";
+import type { PermissionCode } from "@/common/permissions";
+import { permissionsForRole } from "../role-permissions";
 
 export interface LoginRequest {
   username: string;
@@ -21,8 +18,18 @@ export interface ResetPasswordRequest {
   email: string;
 }
 
-export const fetchCurrentUser = async (): Promise<MockUser> => {
-  return mockUsersByRole[CURRENT_MOCK_ROLE];
+export interface CurrentUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roleName: string;
+  permissions: PermissionCode[];
+}
+
+export const fetchCurrentUser = async (): Promise<CurrentUser> => {
+  const response = await axios.get<Omit<CurrentUser, "permissions">>("/auth/me");
+  return { ...response.data, permissions: permissionsForRole(response.data.roleName) };
 };
 
 export const authService = {

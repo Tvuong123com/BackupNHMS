@@ -84,7 +84,7 @@ export const getAssessmentColumns = ({
       header: "Assessment Status",
       cell: ({ row }) => {
         const st = row.original.status;
-        if (st === "CONFIRMED" || st === "COMPLETED") {
+        if (st === "COMPLETED") {
           return (
             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold px-2.5 py-1 text-xs">
               <ShieldCheck className="mr-1 h-3.5 w-3.5 text-emerald-600" /> Confirmed
@@ -105,11 +105,9 @@ export const getAssessmentColumns = ({
         const a = row.original;
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 hover:bg-gray-100">
+            <DropdownMenuTrigger className="inline-flex h-8 items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-sm hover:bg-gray-100">
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="ml-1 text-xs font-semibold">Manage</span>
-              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => onViewDetail(a)} className="font-semibold cursor-pointer">

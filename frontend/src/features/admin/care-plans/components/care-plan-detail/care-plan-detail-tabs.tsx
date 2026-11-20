@@ -9,11 +9,14 @@ type CarePlanNavBarProps = {
   lastReview: string;
   nextReview: string;
   cycle: number;
+  locTier?: number;
+  status?: string;
+  createdAt?: string;
 };
 export default function CarePlanNavBar(props: CarePlanNavBarProps) {
   return (
     <div>
-      <Tabs defaultValue="carePlanDetail" className="w-full">
+      <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -30,11 +33,22 @@ export default function CarePlanNavBar(props: CarePlanNavBarProps) {
         </TabsContent>
 
         <TabsContent value="activity">
-          <CarePlainDetailTabActivity></CarePlainDetailTabActivity>
+          <CarePlainDetailTabActivity
+            listCareGoals={props.listCareGoals}
+            reviewCycle={props.cycle}
+            lastReview={props.lastReview}
+            nextReview={props.nextReview}
+            createdAt={props.createdAt}
+            status={props.status}
+          />
         </TabsContent>
 
         <TabsContent value="cost">
-          <CarePlanDetailTabCost></CarePlanDetailTabCost>
+          <CarePlanDetailTabCost
+            locTier={props.locTier}
+            status={props.status}
+            cycle={props.cycle}
+          />
         </TabsContent>
       </Tabs>
     </div>

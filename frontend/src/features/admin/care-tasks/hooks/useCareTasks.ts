@@ -10,6 +10,7 @@ export function useCareTasks(params?: GroupedTaskQueryParams) {
     queryKey: ["care-tasks-by-cna", params],
     queryFn: () => careTasksApi.getTasksByCna(params),
     refetchOnWindowFocus: false,
+    refetchInterval: 30000,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -17,6 +18,7 @@ export function useCareTasks(params?: GroupedTaskQueryParams) {
     queryKey: ["care-tasks-by-resident", params],
     queryFn: () => careTasksApi.getTasksByResident(params),
     refetchOnWindowFocus: false,
+    refetchInterval: 30000,
     staleTime: 1000 * 60 * 5,
   });
 

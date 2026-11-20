@@ -11,6 +11,9 @@ export const useCreateAdmission = () => {
     mutationFn: createAdmission,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admissions"] });
+      queryClient.invalidateQueries({ queryKey: ["pre-admissions"] });
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["residents"] });
       toast.success(data.message ?? "Created successfully");
     },
     onError: (error: AxiosError<ApiResponse<null>>) => {

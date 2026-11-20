@@ -11,6 +11,7 @@ export const useDeleteScreening = () => {
     mutationFn: deleteScreening,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["pre-admissions"] });
+      queryClient.invalidateQueries({ queryKey: ["residents", "pending"] });
       toast.success(data.message ?? "Deleted successfully");
     },
     onError: (error: AxiosError<ApiResponse<null>>) => {

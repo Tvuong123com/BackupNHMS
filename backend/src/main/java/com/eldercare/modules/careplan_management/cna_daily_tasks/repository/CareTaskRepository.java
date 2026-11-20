@@ -13,6 +13,7 @@ import java.util.List;
 
 @Repository
 public interface CareTaskRepository extends JpaRepository<CareTaskEntity, Long> {
+    List<CareTaskEntity> findByScheduledTimeBetween(OffsetDateTime start, OffsetDateTime end);
 
     @Query("""
         SELECT new com.eldercare.modules.careplan_management.cna_daily_tasks.dto.response.EnrichedTaskRow(

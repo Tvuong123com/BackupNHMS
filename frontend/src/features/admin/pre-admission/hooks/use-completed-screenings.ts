@@ -5,4 +5,5 @@ export const useCompletedScreenings = () =>
   useQuery({
     queryKey: ["pre-admissions", "completed"],
     queryFn: getCompletedScreenings,
+    retry: false,
   });

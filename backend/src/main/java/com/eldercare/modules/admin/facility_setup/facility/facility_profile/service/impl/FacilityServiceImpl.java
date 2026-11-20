@@ -1,6 +1,7 @@
 package com.eldercare.modules.admin.facility_setup.facility.facility_profile.service.impl;
 
 import com.eldercare.common.dto.PagedResponse;
+import com.eldercare.common.enums.BedStatus;
 import com.eldercare.exception.custom.BadRequestException;
 import com.eldercare.exception.custom.ResourceNotFoundException;
 import com.eldercare.modules.admin.facility_setup.facility.dto.request.FacilityCreateRequest;
@@ -88,6 +89,7 @@ public class FacilityServiceImpl implements FacilityService {
         List<BedEntity> beds = bedRepository.findAll();
 
         Map<Long, List<BedSelectResponse>> bedsByRoom = beds.stream()
+                .filter(bed -> bed.getStatus() == BedStatus.AVAILABLE)
                 .collect(Collectors.groupingBy(
                         bed -> bed.getRoom().getId(),
                         Collectors.mapping(
